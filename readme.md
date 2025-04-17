@@ -24,4 +24,7 @@ Si le fichier est vide ou inexistant, aucune copie ne sera faite. Il est vide pa
 d:\Utilisateurs\user\Desktop\JavaAvance\TpBar
 ```
 
-### /!\ dans `bddConf.txt` et `entities.txt` il y a des valeurs par défaut qu'il faut penser à modifier.
+
+## /!\ dans `bddConf.txt` et `entities.txt` il y a des valeurs par défaut qu'il faut penser à modifier.
+
+## Executer zzz.bat
