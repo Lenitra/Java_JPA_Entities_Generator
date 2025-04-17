@@ -1,2 +1,2 @@
-UnitPersistence
-bddName
+pu_jv
+java_ava_test_int_jv
