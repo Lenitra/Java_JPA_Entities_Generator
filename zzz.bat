@@ -124,6 +124,32 @@ if errorlevel 1 (
     exit /b
 )
 
+echo === [4] Déplacement des fichiers dans le bon répertoire
+@REM Vérifier si le fichier projectPath.txt existe
+if not exist "projectPath.txt" (
+    echo ERREUR : le fichier "projectPath.txt" est introuvable.
+    pause
+    exit /b
+)
+
+@REM Lire le chemin contenu dans projectPath.txt
+
+set /p PROJECT_PATH=<projectPath.txt
+if "%PROJECT_PATH%"=="" (
+    echo ERREUR : le fichier "projectPath.txt" est vide.
+    pause
+    exit /b
+)
+
+@REM Vérifier si le chemin est valide
+if not exist "%PROJECT_PATH%" (
+    echo ERREUR : le chemin "%PROJECT_PATH%" est introuvable.
+    pause
+    exit /b
+)
+
+@REM Déplacer le dossier tmp dans le répertoire spécifié
+move /Y "tmp" "%PROJECT_PATH%" > nul
 
 echo ----------------------
 echo         TERMINE
