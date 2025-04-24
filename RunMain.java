@@ -41,6 +41,10 @@ public class RunMain {
                 System.exit(1);
             }
             List<String> entityLines = Files.readAllLines(entitiesFile, StandardCharsets.UTF_8);
+            if (entityLines.isEmpty()) {
+                System.err.println("ERREUR : entities.txt is empty.");
+                System.exit(1);
+            }
             for (String raw : entityLines) {
                 String line = raw.trim().replace(" ", "");
 

@@ -1,2 +1,2 @@
-persistence_units=test
-database_name=test
+persistence_units=
+database_name=
