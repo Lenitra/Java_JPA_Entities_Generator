@@ -18,16 +18,26 @@ set "JAVA_EXEC=%JAVA_HOME%\bin\java.exe"
 set "JAVAC_EXEC=%JAVA_HOME%\bin\javac.exe"
 
 if not exist "%JAVA_EXEC%" (
+    echo
+    echo
+    echo
+    echo ----------------------------------------------------------------------------
     echo Erreur : Le fichier java.exe n'a pas été trouvé dans %JAVA_HOME%\bin.
     echo Vérifiez que le chemin vers le JDK est correct.
     echo Et le modifier dans le script run.bat si nécessaire.
+    echo ----------------------------------------------------------------------------
     pause
     exit /b 1
 )
 if not exist "%JAVAC_EXEC%" (
+    echo ...
+    echo ...
+    echo ...
+    echo ----------------------------------------------------------------------------
     echo Erreur : Le fichier javac.exe n'a pas été trouvé dans %JAVA_HOME%\bin.
     echo Vérifiez que le chemin vers le JDK est correct.
     echo Et le modifier dans le script run.bat si nécessaire.
+    echo ----------------------------------------------------------------------------
     pause
     exit /b 1
 )
