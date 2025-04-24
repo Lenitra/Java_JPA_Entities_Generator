@@ -5,7 +5,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Main {
+public class RunMain {
     public static void main(String[] args) {
         try {
             // Récupère le dossier courant de manière valide
@@ -73,7 +73,7 @@ public class Main {
                             + "@EqualsAndHashCode(callSuper = true, of = {\"TODO\", \"mettre une liste d'arguments\"})"
                             + System.lineSeparator()
                             + "@RequiredArgsConstructor (access = AccessLevel.PROTECTED)" + System.lineSeparator()
-                            + System.lineSeparator() + System.lineSeparator()
+                            + System.lineSeparator()
 
                             + "public class " + name + " extends AbstractEntity {"
                             + System.lineSeparator() + System.lineSeparator()
@@ -102,7 +102,7 @@ public class Main {
 
                 else if (line.startsWith("e:")) {
                     String name = line.substring(2);
-                    String enumSrc = "package entities.references;" + System.lineSeparator()
+                    String enumSrc = "package entities.enums;" + System.lineSeparator()
                             + System.lineSeparator()
                             + "public enum " + name + " {" + System.lineSeparator()
                             + "    // TODO: add values" + System.lineSeparator()
