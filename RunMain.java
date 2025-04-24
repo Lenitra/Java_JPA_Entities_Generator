@@ -134,9 +134,11 @@ public class RunMain {
             String dbName = conf.get(1).trim().split("=")[1].trim();
             if (unitName.isEmpty()) {
                 System.err.println("AVERTISSEMENT : UNIT_NAME est vide.");
+                System.exit(1);
             }
             if (dbName.isEmpty()) {
                 System.err.println("AVERTISSEMENT : DB_NAME est vide.");
+                System.exit(1);
             }
 
             List<String> lines = Files.readAllLines(persistenceFile, StandardCharsets.UTF_8);
@@ -156,8 +158,6 @@ public class RunMain {
                     .collect(Collectors.toList());
             Files.write(persistenceFile, modified, StandardCharsets.UTF_8);
 
-
-
             // 4. In /tmp remove all files named "none.none"
             Files.walkFileTree(tmpDir, new SimpleFileVisitor<Path>() {
                 @Override
@@ -168,6 +168,29 @@ public class RunMain {
                     return FileVisitResult.CONTINUE;
                 }
             });
+
+            // 5. Copy tmp content to the inteliji project folder
+            // The project folder is the content of intellijProjectPath.txt
+            // 5. Copier le contenu de tmp vers le dossier du projet IntelliJ
+            Path intellijPathFile = cwd.resolve("inteliJProjectPath.txt");
+            if (!Files.exists(intellijPathFile)) {
+                System.err.println("ERREUR : intellijProjectPath.txt introuvable.");
+                System.exit(1);
+            }
+            List<String> projLines = Files.readAllLines(intellijPathFile, StandardCharsets.UTF_8);
+            if (projLines.isEmpty() || projLines.get(0).trim().isEmpty()) {
+                System.err.println("ERREUR : intellijProjectPath.txt est vide ou contient un chemin invalide.");
+                System.exit(1);
+            }
+            Path projectDir = Paths.get(projLines.get(0).trim()).toAbsolutePath().normalize();
+            if (!Files.exists(projectDir) || !Files.isDirectory(projectDir)) {
+                System.err.println("ERREUR : le dossier projet IntelliJ spécifié n'existe pas : " + projectDir);
+                System.exit(1);
+            }
+
+            // Copier tout le contenu de tmp dans le dossier IntelliJ (écrase si nécessaire)
+            copyDirectory(tmpDir, projectDir);
+
 
             System.out.println();
             System.out.println();
