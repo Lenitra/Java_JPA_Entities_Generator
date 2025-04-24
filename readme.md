@@ -1,7 +1,7 @@
 # Utilité :
 1. Permet de générer les classes/enums entitées avec leurs dao interface et leur implication.
 2. Modifie les accès à la BDD persistence unit, et la bdd name. 
-3. (F) Copie les documents générés dans votre projet
+3. Copie les documents générés dans votre projet InteliJ
 # USAGE
 ## 1. Renseigner les entitées et les enums dans le fichier `entities.txt` sous le format :
 ```
