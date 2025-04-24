@@ -1,2 +1,2 @@
-persistence_units=aaaaaaaaaaaaaaaa
-database_name=bbbbbbbbbbbbbbbbbbbbbbbbb
+persistence_units=pu_judo
+database_name=JUDO_Database
