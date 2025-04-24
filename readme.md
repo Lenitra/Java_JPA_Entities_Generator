@@ -21,10 +21,10 @@ database_name=JUDO_Database
 ## 3. (Facultatif) Renseigner le chemin vers votre projet InteliJ dans `inteliJProjectPath.txt`
 Si le fichier est vide ou inexistant, aucune copie ne sera faite. Il est vide par défaut.
 ```
-d:\Utilisateurs\user\Desktop\JavaAvance\TpBar
+D:\Utilisateurs\thomas.lemartinel\Desktop\JavaAvance\toast
 ```
 
 
 ## /!\ dans `bddConf.txt` et `entities.txt` il y a des valeurs par défaut qu'il faut penser à modifier.
 
-## Executer zzz.bat
+## RunMain.java
