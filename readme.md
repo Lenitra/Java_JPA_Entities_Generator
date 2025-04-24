@@ -12,7 +12,7 @@ c:nomClasse
 e:nomEnum
 ```
 
-## 2. Renseigner les données dans `bddConf.txt`, les données sont écrites en dur : 1e ligne et 2e ligne pour les deux données
+## 2. Renseigner les données dans `bddConf.txt`
 ```
 persistence_units=pu_judo
 database_name=JUDO_Database
