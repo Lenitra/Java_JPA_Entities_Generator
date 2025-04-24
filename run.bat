@@ -1,0 +1,61 @@
+@echo off
+echo [1/5] Changement de répertoire vers le dossier du script...
+cd /d "%~dp0"
+echo Répertoire actuel : %cd%
+pause
+
+echo [2/5] Détection du JDK...
+
+
+@REM ---------------------------------
+@REM Modifier le chemin vers le JDK ici si nécessaire
+@REM JAVA_HOME doit pointer vers le dossier d'installation du JDK
+@REM ---------------------------------
+set "JAVA_HOME=D:\jdk-17.0.12"
+
+
+set "JAVA_EXEC=%JAVA_HOME%\bin\java.exe"
+set "JAVAC_EXEC=%JAVA_HOME%\bin\javac.exe"
+
+if not exist "%JAVA_EXEC%" (
+    echo Erreur : Le fichier java.exe n'a pas été trouvé dans %JAVA_HOME%\bin.
+    echo Vérifiez que le chemin vers le JDK est correct.
+    echo Et le modifier dans le script run.bat si nécessaire.
+    pause
+    exit /b 1
+)
+if not exist "%JAVAC_EXEC%" (
+    echo Erreur : Le fichier javac.exe n'a pas été trouvé dans %JAVA_HOME%\bin.
+    echo Vérifiez que le chemin vers le JDK est correct.
+    echo Et le modifier dans le script run.bat si nécessaire.
+    pause
+    exit /b 1
+)
+echo JAVA_HOME forcé : %JAVA_HOME%
+pause
+
+echo [3/5] Préparation du dossier de compilation...
+set "BIN_DIR=bin"
+if not exist "%BIN_DIR%" (
+    mkdir "%BIN_DIR%"
+    echo Dossier 'bin' créé
+) else (
+    echo Dossier 'bin' déjà présent
+)
+pause
+
+echo [4/5] Compilation de RunMain.java...
+"%JAVAC_EXEC%" -d "%BIN_DIR%" RunMain.java
+if errorlevel 1 (
+    echo Échec de la compilation. Vérifiez votre code source.
+    pause
+    exit /b 1
+) else (
+    echo Compilation réussie !
+)
+pause
+
+echo [5/5] Exécution de la classe RunMain...
+"%JAVA_EXEC%" -XX:+ShowCodeDetailsInExceptionMessages -cp "%BIN_DIR%" RunMain
+echo Exécution terminée.
+pause

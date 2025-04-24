@@ -130,13 +130,23 @@ public class RunMain {
                 System.exit(1);
             }
 
-            String unitName = conf.get(0).trim().split("=")[1].trim();
-            String dbName = conf.get(1).trim().split("=")[1].trim();
-            if (unitName.isEmpty()) {
+
+            final String[] dbName = {""};
+            final String[] unitName = {""};
+
+            try {
+                unitName[0] = conf.get(0).split("=")[1].trim();
+                dbName[0] = conf.get(1).split("=")[1].trim();
+            } catch (ArrayIndexOutOfBoundsException e) {
+                System.err.println("ERREUR : bddConf.txt est mal formé.");
+                System.exit(1);
+            }
+
+            if (unitName[0].isEmpty()) {
                 System.err.println("AVERTISSEMENT : UNIT_NAME est vide.");
                 System.exit(1);
             }
-            if (dbName.isEmpty()) {
+            if (dbName[0].isEmpty()) {
                 System.err.println("AVERTISSEMENT : DB_NAME est vide.");
                 System.exit(1);
             }
@@ -147,10 +157,10 @@ public class RunMain {
                         String[] tokens = l.split(" ");
                         for (int i = 0; i < tokens.length; i++) {
                             if (tokens[i].equals("name=\"PERSISTENCEUNITNAME\">")) {
-                                tokens[i] = "name=\"" + unitName + "\">";
+                                tokens[i] = "name=\"" + unitName[0] + "\">";
                             }
                             if (tokens[i].contains("DBNAME")) {
-                                tokens[i] = tokens[i].replace("DBNAME", dbName);
+                                tokens[i] = tokens[i].replace("DBNAME", dbName[0]);
                             }
                         }
                         return String.join(" ", tokens);
@@ -175,16 +185,19 @@ public class RunMain {
             Path intellijPathFile = cwd.resolve("inteliJProjectPath.txt");
             if (!Files.exists(intellijPathFile)) {
                 System.err.println("ERREUR : intellijProjectPath.txt introuvable.");
+                System.out.println("Le dossier tmp/ (le template customisé) à quand même été généré.");
                 System.exit(1);
             }
             List<String> projLines = Files.readAllLines(intellijPathFile, StandardCharsets.UTF_8);
             if (projLines.isEmpty() || projLines.get(0).trim().isEmpty()) {
                 System.err.println("ERREUR : intellijProjectPath.txt est vide ou contient un chemin invalide.");
+                System.out.println("Le dossier tmp/ (le template customisé) à quand même été généré.");
                 System.exit(1);
             }
             Path projectDir = Paths.get(projLines.get(0).trim()).toAbsolutePath().normalize();
             if (!Files.exists(projectDir) || !Files.isDirectory(projectDir)) {
                 System.err.println("ERREUR : le dossier projet IntelliJ spécifié n'existe pas : " + projectDir);
+                System.out.println("Le dossier tmp/ (le template customisé) à quand même été généré.");
                 System.exit(1);
             }
 
