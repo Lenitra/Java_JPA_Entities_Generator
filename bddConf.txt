@@ -1,2 +1,2 @@
-pu_jv
-java_ava_test_int_jv
+persistence_units=aaaaaaaaaaaaaaaa
+database_name=bbbbbbbbbbbbbbbbbbbbbbbbb

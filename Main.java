@@ -15,9 +15,6 @@ public class Main {
             Path tmpDir = cwd.resolve("tmp");
             deleteIfExists(tmpDir);
 
-
-
-
             // 1. Copy template
             Path templateDir = cwd.resolve("Template");
             if (!Files.isDirectory(templateDir)) {
@@ -26,22 +23,17 @@ public class Main {
             }
             copyDirectory(templateDir, tmpDir);
 
-
             // Prepare paths
             Path entityDir = tmpDir.resolve("src/main/java/entities");
             Path daoDir = tmpDir.resolve("src/main/java/dao");
             Path daoImplDir = daoDir.resolve("bdd");
             Path referenceDir = entityDir.resolve("enums");
-        
+
             Files.createDirectories(entityDir);
             Files.createDirectories(daoDir);
             Files.createDirectories(daoImplDir);
             Files.createDirectories(referenceDir);
 
-            
-
-
-            
             // 2. Process entities.txt
             Path entitiesFile = cwd.resolve("entities.txt");
             if (!Files.exists(entitiesFile)) {
@@ -51,29 +43,35 @@ public class Main {
             List<String> entityLines = Files.readAllLines(entitiesFile, StandardCharsets.UTF_8);
             for (String raw : entityLines) {
                 String line = raw.trim().replace(" ", "");
-                
+
                 if (line.startsWith("c:")) {
                     String name = line.substring(2);
                     // Entity class
-                    String entitySrc = "package entities;" 
+                    String entitySrc = "package entities;"
                             + System.lineSeparator() + System.lineSeparator()
 
                             + "import model.entities.AbstractEntity;"
                             + System.lineSeparator() + System.lineSeparator()
 
-                            + "import jakarta.persistence.*;"+ System.lineSeparator() 
-                            + "import lombok.*;"+ System.lineSeparator() 
-                            + "import jakarta.validation.*;"+ System.lineSeparator() 
+                            + "import jakarta.persistence.*;" + System.lineSeparator()
+                            + "import lombok.*;" + System.lineSeparator()
+                            + "import jakarta.validation.*;" + System.lineSeparator()
                             + System.lineSeparator() + System.lineSeparator()
-                            
-                            + "@Entity" + System.lineSeparator() 
+
+                            + "@Entity" + System.lineSeparator()
                             + "//TODO: Configurer les arguments de la clé primaire" + System.lineSeparator()
-                            + "@Table(name = \"" + name.toLowerCase() + "\",uniqueConstraints = @UniqueConstraint(name = \"uk_" + name.toLowerCase() + "__TODOarg1_TODOarg2\", columnNames = {\"__TODOarg1_TODOarg2\"}))" + System.lineSeparator()
+                            + "@Table(name = \"" + name.toLowerCase()
+                            + "\",uniqueConstraints = @UniqueConstraint(name = \"uk_" + name.toLowerCase()
+                            + "__TODOarg1_TODOarg2\", columnNames = {\"__TODOarg1_TODOarg2\"}))"
+                            + System.lineSeparator()
                             + "@NoArgsConstructor (access = AccessLevel.PROTECTED)" + System.lineSeparator()
-                            + "//TODO: Configurer les arguments qui seront affichés sur le ToString" + System.lineSeparator()
-                            + "@ToString(callSuper = true, of = {\"TODO\", \"mettre une liste d'arguments\"})" + System.lineSeparator() 
+                            + "//TODO: Configurer les arguments qui seront affichés sur le ToString"
+                            + System.lineSeparator()
+                            + "@ToString(callSuper = true, of = {\"TODO\", \"mettre une liste d'arguments\"})"
+                            + System.lineSeparator()
                             + "//TODO: Configurer les arguments qui seront marque d'unicité" + System.lineSeparator()
-                            + "@EqualsAndHashCode(callSuper = true, of = {\"TODO\", \"mettre une liste d'arguments\"})" + System.lineSeparator() 
+                            + "@EqualsAndHashCode(callSuper = true, of = {\"TODO\", \"mettre une liste d'arguments\"})"
+                            + System.lineSeparator()
                             + "@RequiredArgsConstructor (access = AccessLevel.PROTECTED)" + System.lineSeparator()
                             + System.lineSeparator() + System.lineSeparator()
 
@@ -100,8 +98,8 @@ public class Main {
                             + "}" + System.lineSeparator();
                     Files.write(daoImplDir.resolve(name + "DaoImpl.java"), implSrc.getBytes(StandardCharsets.UTF_8));
 
-                } 
-                
+                }
+
                 else if (line.startsWith("e:")) {
                     String name = line.substring(2);
                     String enumSrc = "package entities.references;" + System.lineSeparator()
@@ -112,9 +110,6 @@ public class Main {
                     Files.write(referenceDir.resolve(name + ".java"), enumSrc.getBytes(StandardCharsets.UTF_8));
                 }
             }
-
-
-
 
             // 3. Modify persistence.xml
             Path persistenceFile = tmpDir.resolve("src/main/resources/META-INF/persistence.xml");
@@ -135,8 +130,8 @@ public class Main {
                 System.exit(1);
             }
 
-            String unitName = conf.get(0).trim();
-            String dbName = conf.size() >= 2 ? conf.get(1).trim() : "";
+            String unitName = conf.get(0).trim().split("=")[1].trim();
+            String dbName = conf.get(1).trim().split("=")[1].trim();
             if (unitName.isEmpty()) {
                 System.err.println("AVERTISSEMENT : UNIT_NAME est vide.");
             }
@@ -152,13 +147,17 @@ public class Main {
                             if (tokens[i].equals("name=\"PERSISTENCEUNITNAME\">")) {
                                 tokens[i] = "name=\"" + unitName + "\">";
                             }
+                            if (tokens[i].contains("DBNAME")) {
+                                tokens[i] = tokens[i].replace("DBNAME", dbName);
+                            }
                         }
                         return String.join(" ", tokens);
                     })
                     .collect(Collectors.toList());
             Files.write(persistenceFile, modified, StandardCharsets.UTF_8);
 
-            
+
+
             // 4. In /tmp remove all files named "none.none"
             Files.walkFileTree(tmpDir, new SimpleFileVisitor<Path>() {
                 @Override
@@ -175,8 +174,6 @@ public class Main {
             System.out.println("-----------");
             System.out.println(". TERMINÉ .");
             System.out.println("-----------");
-
-
 
         } catch (IOException e) {
             e.printStackTrace();
