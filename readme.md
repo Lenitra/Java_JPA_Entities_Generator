@@ -14,11 +14,11 @@ e:nomEnum
 
 ## 2. Renseigner les données dans `bddConf.txt`, les données sont écrites en dur : 1e ligne et 2e ligne pour les deux données
 ```
-UnitPersistence
-bddName
+persistence_units=pu_judo
+database_name=JUDO_Database
 ```
 
-## 3. (Facultatif) Renseigner le chemin vers votre projet InteliJ dans `projetPath.txt`
+## 3. (Facultatif) Renseigner le chemin vers votre projet InteliJ dans `inteliJProjectPath.txt`
 Si le fichier est vide ou inexistant, aucune copie ne sera faite. Il est vide par défaut.
 ```
 d:\Utilisateurs\user\Desktop\JavaAvance\TpBar
