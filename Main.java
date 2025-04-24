@@ -5,7 +5,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Test {
+public class Main {
     public static void main(String[] args) {
         try {
             // Récupère le dossier courant de manière valide
@@ -31,7 +31,7 @@ public class Test {
             Path entityDir = tmpDir.resolve("src/main/java/entities");
             Path daoDir = tmpDir.resolve("src/main/java/dao");
             Path daoImplDir = daoDir.resolve("bdd");
-            Path referenceDir = entityDir.resolve("references");
+            Path referenceDir = entityDir.resolve("enums");
         
             Files.createDirectories(entityDir);
             Files.createDirectories(daoDir);
@@ -55,10 +55,30 @@ public class Test {
                 if (line.startsWith("c:")) {
                     String name = line.substring(2);
                     // Entity class
-                    String entitySrc = "package entities;" + System.lineSeparator()
-                            + System.lineSeparator()
-                            + "public class " + name + " extends AbstractEntity {" + System.lineSeparator()
-                            + System.lineSeparator()
+                    String entitySrc = "package entities;" 
+                            + System.lineSeparator() + System.lineSeparator()
+
+                            + "import model.entities.AbstractEntity;"
+                            + System.lineSeparator() + System.lineSeparator()
+
+                            + "import jakarta.persistence.*;"+ System.lineSeparator() 
+                            + "import lombok.*;"+ System.lineSeparator() 
+                            + "import jakarta.validation.*;"+ System.lineSeparator() 
+                            + System.lineSeparator() + System.lineSeparator()
+                            
+                            + "@Entity" + System.lineSeparator() 
+                            + "//TODO: Configurer les arguments de la clé primaire" + System.lineSeparator()
+                            + "@Table(name = \"" + name.toLowerCase() + "\",uniqueConstraints = @UniqueConstraint(name = \"uk_" + name.toLowerCase() + "__TODOarg1_TODOarg2\", columnNames = {\"__TODOarg1_TODOarg2\"}))" + System.lineSeparator()
+                            + "@NoArgsConstructor (access = AccessLevel.PROTECTED)" + System.lineSeparator()
+                            + "//TODO: Configurer les arguments qui seront affichés sur le ToString" + System.lineSeparator()
+                            + "@ToString(callSuper = true, of = {\"TODO\", \"mettre une liste d'arguments\"})" + System.lineSeparator() 
+                            + "//TODO: Configurer les arguments qui seront marque d'unicité" + System.lineSeparator()
+                            + "@EqualsAndHashCode(callSuper = true, of = {\"TODO\", \"mettre une liste d'arguments\"})" + System.lineSeparator() 
+                            + "@RequiredArgsConstructor (access = AccessLevel.PROTECTED)" + System.lineSeparator()
+                            + System.lineSeparator() + System.lineSeparator()
+
+                            + "public class " + name + " extends AbstractEntity {"
+                            + System.lineSeparator() + System.lineSeparator()
                             + "}" + System.lineSeparator();
                     Files.write(entityDir.resolve(name + ".java"), entitySrc.getBytes(StandardCharsets.UTF_8));
 
@@ -138,12 +158,26 @@ public class Test {
                     .collect(Collectors.toList());
             Files.write(persistenceFile, modified, StandardCharsets.UTF_8);
 
-
-
-            System.out.println("TERMINE");
-
-
             
+            // 4. In /tmp remove all files named "none.none"
+            Files.walkFileTree(tmpDir, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    if (file.getFileName().toString().equals("none")) {
+                        Files.delete(file);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+
+            System.out.println();
+            System.out.println();
+            System.out.println("-----------");
+            System.out.println(". TERMINÉ .");
+            System.out.println("-----------");
+
+
+
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
