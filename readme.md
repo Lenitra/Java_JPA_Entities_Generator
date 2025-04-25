@@ -3,6 +3,7 @@
 2. Modifie les accès à la BDD persistence unit, et la bdd name. 
 3. Copie les documents générés dans votre projet InteliJ
 # USAGE
+## 0. Modifier le run.bat pour indiquer ou se situe votre JDK
 ## 1. Renseigner les entitées et les enums dans le fichier `entities.txt` sous le format :
 ```
 c:nomClasse
