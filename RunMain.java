@@ -148,7 +148,7 @@ public class RunMain {
             metierSrc += "    }" + System.lineSeparator()
                     + System.lineSeparator()
                     + "        public void init() {" + System.lineSeparator()
-                    + "        Path path = Path.of(FacadeMetierImpl.class.getResource(\"/init.csv\").toURI());" + System.lineSeparator()
+                    + "        Path path = Path.of(FacadeMetierImpl.class.getResource(\"/csv/init.csv\").toURI());" + System.lineSeparator()
                     + "        for (String line : Files.readAllLines(path)) {" + System.lineSeparator()
                     + "            String[] tokens = line.split(\";\");" + System.lineSeparator()
                     + "            String name = tokens[0];" + System.lineSeparator()
