@@ -26,6 +26,7 @@ public class RunMain {
             // Prepare paths
             Path entityDir = tmpDir.resolve("src/main/java/entities");
             Path daoDir = tmpDir.resolve("src/main/java/dao");
+            Path metierDirImpl = tmpDir.resolve("src/main/java/metier/metierImpl");
             Path daoImplDir = daoDir.resolve("bdd");
             Path referenceDir = entityDir.resolve("enums");
 
@@ -66,7 +67,7 @@ public class RunMain {
                             + "//TODO: Configurer les arguments de la clé primaire" + System.lineSeparator()
                             + "@Table(name = \"" + name.toLowerCase()
                             + "\",uniqueConstraints = @UniqueConstraint(name = \"uk_" + name.toLowerCase()
-                            + "__TODOarg1_TODOarg2\", columnNames = {\"__TODOarg1_TODOarg2\"}))"
+                            + "__TODOarg1_TODOarg2\", columnNames = {\"TODOarg1\", \"TODOarg2\"}))"
                             + System.lineSeparator()
                             + "@NoArgsConstructor (access = AccessLevel.PROTECTED)" + System.lineSeparator()
                             + "//TODO: Configurer les arguments qui seront affichés sur le ToString"
@@ -114,6 +115,93 @@ public class RunMain {
                     Files.write(referenceDir.resolve(name + ".java"), enumSrc.getBytes(StandardCharsets.UTF_8));
                 }
             }
+
+
+
+
+            // 2.5 Création de la classe MetierImpl.java qui implémente TODO et à en attributs les DAOs
+            String metierSrc = "package metier.metierImpl;" + System.lineSeparator()
+                    + System.lineSeparator()
+                    + "import dao.*;" + System.lineSeparator()
+                    + System.lineSeparator()
+                    + "// TODO: Gérer l'implementation de l'interface A_CHANGER" + System.lineSeparator()
+                    + "public class MetierImpl implements A_CHANGER {" + System.lineSeparator()+ System.lineSeparator();
+
+
+            for (String raw : entityLines) {
+                String line = raw.trim().replace(" ", "");
+                if (line.startsWith("c:")) {
+                    String name = line.substring(2);
+                    metierSrc += "    private " + name + "Dao " + name.toLowerCase() + "Dao;" + System.lineSeparator();
+                }
+                
+            }
+            metierSrc += System.lineSeparator()
+                    + "    public MetierImpl() {" + System.lineSeparator();
+            for (String raw : entityLines) {
+                String line = raw.trim().replace(" ", "");
+                if (line.startsWith("c:")) {
+                    String name = line.substring(2);
+                    metierSrc += "        this." + name.toLowerCase() + "Dao = DaoFactory.fabriquer" + name + "Dao();" + System.lineSeparator();
+                }
+            }
+            metierSrc += "    }" + System.lineSeparator()
+                    + System.lineSeparator()
+                    + "        public void init() {" + System.lineSeparator()
+                    + "        Path path = Path.of(FacadeMetierImpl.class.getResource(\"/init.csv\").toURI());" + System.lineSeparator()
+                    + "        for (String line : Files.readAllLines(path)) {" + System.lineSeparator()
+                    + "            String[] tokens = line.split(\";\");" + System.lineSeparator()
+                    + "            String name = tokens[0];" + System.lineSeparator()
+                    + "            String val2 = tokens[1];" + System.lineSeparator()
+                    + "            switch (name) {" + System.lineSeparator()
+                    + "                case \"TODO\" -> {}" + System.lineSeparator()
+                    + "                case \"TODO\" -> {}" + System.lineSeparator()
+                    + "            }" + System.lineSeparator()
+                    + "        }" + System.lineSeparator()
+                    + "    }" + System.lineSeparator()
+                    + System.lineSeparator()
+
+                    + "}" + System.lineSeparator();
+
+            Files.write(metierDirImpl.resolve("MetierImpl.java"), metierSrc.getBytes(StandardCharsets.UTF_8));
+
+
+
+                
+            // 2.6 Création de la classe DaoFactory.java
+            String daoFactorySrc = "package dao;" + System.lineSeparator()
+                    + System.lineSeparator()
+                    + "import lombok.*;" + System.lineSeparator()
+                    + System.lineSeparator()
+                    + "import model.dao.*;" + System.lineSeparator()
+                    + System.lineSeparator()
+                    + "@NoArgsConstructor(access = AccessLevel.PRIVATE)" + System.lineSeparator()
+                    + "public final class DaoFactory {" + System.lineSeparator()
+                    + System.lineSeparator();
+            for (String raw : entityLines) {
+                String line = raw.trim().replace(" ", "");
+                if (line.startsWith("c:")) {
+                    String name = line.substring(2);
+                    daoFactorySrc += "    private static " + name + "Dao instance" + name + "Dao;" + System.lineSeparator();
+                }
+            }
+            daoFactorySrc += System.lineSeparator();
+            for (String raw : entityLines) {
+                String line = raw.trim().replace(" ", "");
+                if (line.startsWith("c:")) {
+                    String name = line.substring(2);
+                    daoFactorySrc += "    public static " + name + "Dao fabriquer" + name + "Dao(){" + System.lineSeparator()
+                            + "        if(instance" + name + "Dao == null){" + System.lineSeparator()
+                            + "            instance" + name + "Dao = new " + name + "DaoImpl();" + System.lineSeparator()
+                            + "        }" + System.lineSeparator()
+                            + "        return instance" + name + "Dao;" + System.lineSeparator()
+                            + "    }" + System.lineSeparator();
+                }
+            }
+            daoFactorySrc += System.lineSeparator()
+                    + "}" + System.lineSeparator();
+            Files.write(daoDir.resolve("DaoFactory.java"), daoFactorySrc.getBytes(StandardCharsets.UTF_8));
+
 
             // 3. Modify persistence.xml
             Path persistenceFile = tmpDir.resolve("src/main/resources/META-INF/persistence.xml");
