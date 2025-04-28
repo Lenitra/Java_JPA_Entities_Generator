@@ -116,6 +116,34 @@ public class RunMain {
                 }
             }
 
+            // 2.4 Création de l'entity factory
+            String entityFactorySrc = "package entities;" + System.lineSeparator()
+                    + System.lineSeparator()
+                    + "import jakarta.validation.*;" + System.lineSeparator()
+                    + "import lombok.AccessLevel;" + System.lineSeparator()
+                    + "import lombok.NoArgsConstructor;" + System.lineSeparator()
+                    + System.lineSeparator()
+                    + "import java.time.LocalDate;" + System.lineSeparator()
+                    + "import java.time.LocalDateTime;" + System.lineSeparator()
+                    + "import java.util.Set;" + System.lineSeparator()
+                    + System.lineSeparator()
+                    + "@NoArgsConstructor(access = AccessLevel.PRIVATE)" + System.lineSeparator()
+                    + "public final class EntityFactory {" + System.lineSeparator()
+                    + System.lineSeparator();
+            for (String raw : entityLines) {
+                String line = raw.trim().replace(" ", "");
+                if (line.startsWith("c:")) {
+                    String name = line.substring(2);
+                    entityFactorySrc += "    public static" + name + " fabriquer" + name + "() {" + System.lineSeparator()
+                            + "        // TODO: Appeller les setters ici" + System.lineSeparator()
+                            + "        return new " + name + "();" + System.lineSeparator()
+                            + "    }" + System.lineSeparator();
+                }
+            }
+
+
+            Files.write(entityDir.resolve("EntityFactory.java"), entityFactorySrc.getBytes(StandardCharsets.UTF_8));
+
 
 
 
