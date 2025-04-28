@@ -18,7 +18,7 @@ import java.util.Collections;
 @EqualsAndHashCode(callSuper = false, of = {"nom","adresse"})
 @RequiredArgsConstructor (access = AccessLevel.PROTECTED)
 @NoArgsConstructor (access = AccessLevel.PROTECTED)
-public class Bar extends AbstractEntity {
+public class EXEMPLEBar extends AbstractEntity {
 
     //LBK
     @Getter
