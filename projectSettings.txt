@@ -1,2 +1,2 @@
-database_name=guilde_master
+database_name=
 inteliJ_project_path=

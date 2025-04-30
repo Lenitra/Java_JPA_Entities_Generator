@@ -36,6 +36,8 @@ public class RunMain {
             Path referenceDir = entityDir.resolve("enums");
             Path servicesDir = tmpDir.resolve("src/main/java/app/model/services");
             Path commandsDir = tmpDir.resolve("src/main/java/app/model/commands");
+            Path applicationPropertiesFile = tmpDir.resolve("src/main/resources/application.properties");
+            Path pomFile = tmpDir.resolve("pom.xml");
 
             Files.createDirectories(entityDir);
             Files.createDirectories(daoDir);
@@ -196,7 +198,7 @@ public class RunMain {
                 if (value.isEmpty()) {
                     showWarn("database_name est vide. Valeur par defaut laissee.");
                 } else {
-                    changeDatabaseNameConfig(value);
+                    changeDatabaseNameConfig(value, applicationPropertiesFile);
                 }
             } else {
                 showWarn("La clef 'database_name' n'a pas ete trouvee dans projectSettings.txt.");
@@ -207,7 +209,7 @@ public class RunMain {
             if (configs.containsKey("inteliJ_project_path")) {
                 String value = configs.get("inteliJ_project_path");
                 if (value.isEmpty()) {
-                    showWarn("database_name est vide. Le dossier genere 'tmp' ne sera pas deplace.");
+                    showWarn("inteliJ_project_path est vide. Le dossier genere 'tmp' ne sera pas deplace.");
                 } else {
                     copyDirectory(tmpDir, Paths.get(value));
                 }
@@ -218,7 +220,6 @@ public class RunMain {
             showInfos("-----------");
             showInfos(". TERMINE .");
             showInfos("-----------");
-
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -267,8 +268,18 @@ public class RunMain {
         });
     }
 
-    private static void changeDatabaseNameConfig(String databaseName) {
-        // TODO
+    private static void changeDatabaseNameConfig(String databaseName, Path propertiesFile) {
+        // in propertiesFile change "DB_NAME_PLACEHOLDER" by databaseName
+        try {
+            List<String> lines = Files.readAllLines(propertiesFile, StandardCharsets.UTF_8);
+            for (int i = 0; i < lines.size(); i++) {
+                lines.set(i, lines.get(i).replace("DB_NAME_PLACEHOLDER", databaseName));
+            }
+            Files.write(propertiesFile, lines, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            showError("Erreur lors de la mise à jour du fichier de configuration : " + e.getMessage());
+        }
+
     }
 
     public static void showInfos(String message) {
