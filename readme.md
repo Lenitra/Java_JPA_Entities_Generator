@@ -24,10 +24,5 @@ inteliJ_project_path=D:\Utilisateurs\thomas.lemartinel\Desktop\JavaAvance\toast
 ### Clefs
 - database_name : permet de configurer le application.properties
 - inteliJ_project_path : **racine** du projet généré par inteliJ
-- 
 
 *Obligatoire
-
-
-
-# Configuration du `application.properties` pas encore faite ! 

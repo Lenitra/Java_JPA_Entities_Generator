@@ -1,4 +1,5 @@
 c:Personnage
+- String nom*
 c:Sort
 c:Guilde
 e:TypeGuilde

@@ -55,7 +55,7 @@ public class RunMain {
                 System.exit(1);
             }
             for (String raw : entityLines) {
-                String line = raw.trim().replace(" ", "");
+                String line = raw.trim();
 
                 if (line.startsWith("c:")) {
                     String name = line.substring(2);
@@ -87,10 +87,36 @@ public class RunMain {
                             + System.lineSeparator()
 
                             + "public class " + name + " extends AbstractPersistable<Long> {"
-                            + System.lineSeparator() + System.lineSeparator()
-                            + "}" + System.lineSeparator();
+                            + System.lineSeparator() + System.lineSeparator();
+
+                    boolean inClass = false;
+
+                    for (String raw2 : entityLines) {
+                        String line2 = raw2.trim();
+                        if (line2 == line){
+                            inClass = true;
+                        }
+                        if (inClass){
+                            if (line2.startsWith("-")){
+                                showError(line2);
+                                line2 = line2.replaceFirst("^[^a-zA-Z]*", "");
+                                String varType = line2.split(" ")[0];
+                                String varName = line2.split(" ")[1].replace("*", "");
+                                entitySrc += "private " + varType + " " + varName + ";";
+                            }
+                            else{
+                                entitySrc += "}";
+                                inClass = false;
+                                break;
+                            }
+                        }
+                    }
 
                     Files.write(entityDir.resolve(name + ".java"), entitySrc.getBytes(StandardCharsets.UTF_8));
+
+
+
+
 
                     // DAO de chaque entite
                     String implSrc = "package app.model.dao;\n" +
@@ -105,6 +131,9 @@ public class RunMain {
 
                     Files.write(daoDir.resolve(name + "Dao.java"), implSrc.getBytes(StandardCharsets.UTF_8));
 
+
+
+
                     // Service interface
                     String interfaceService = "package app.model.services;" + System.lineSeparator()
                             + System.lineSeparator()
@@ -116,6 +145,9 @@ public class RunMain {
                             + "}" + System.lineSeparator();
                     Files.write(servicesDir.resolve("Interfaces/I" + name + "Service.java"),
                             interfaceService.getBytes(StandardCharsets.UTF_8));
+
+
+
 
                     // Service implémentation
                     String serviceImplement = "package app.model.services;\n" +
@@ -137,6 +169,9 @@ public class RunMain {
                     Files.write(servicesDir.resolve("" + name + "Service.java"),
                             serviceImplement.getBytes(StandardCharsets.UTF_8));
 
+
+
+
                     String commands = "package app.model.commands;\n\n" +
                             "import app.model.services.I" + name + "Service;\n" +
                             "import lombok.NonNull;\n" +
@@ -156,6 +191,8 @@ public class RunMain {
                             commands.getBytes(StandardCharsets.UTF_8));
                 }
 
+
+
                 else if (line.startsWith("e:")) {
                     String name = line.substring(2);
                     String enumSrc = "package entities.enums;" + System.lineSeparator()
@@ -164,6 +201,10 @@ public class RunMain {
                             + "    // TODO: add values" + System.lineSeparator()
                             + "}" + System.lineSeparator();
                     Files.write(referenceDir.resolve(name + ".java"), enumSrc.getBytes(StandardCharsets.UTF_8));
+                }
+                else if (line.startsWith("-")){}
+                else {
+                    showWarn("Ligne non reconnue dans entities.txt : \n" + line);
                 }
             }
 
