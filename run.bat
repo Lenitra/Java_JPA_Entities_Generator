@@ -2,15 +2,14 @@
 echo [1/5] Changement de répertoire vers le dossier du script...
 cd /d "%~dp0"
 echo Répertoire actuel : %cd%
-pause
 
 echo [2/5] Détection du JDK...
 
 
 
 @REM Try to read javapath.txt
-if exist "javapath.txt" (
-    for /f "usebackq delims=" %%j in ("javapath.txt") do set "JAVA_HOME=%%j"
+if exist "config/javapath.txt" (
+    for /f "usebackq delims=" %%j in ("config/javapath.txt") do set "JAVA_HOME=%%j"
 ) else (
     @REM set "JAVA_HOME=D:\jdk-17.0.12"
 )
@@ -44,7 +43,7 @@ if not exist "%JAVAC_EXEC%" (
     exit /b 1
 )
 echo JAVA_HOME forcé : %JAVA_HOME%
-pause
+
 
 echo [3/5] Préparation du dossier de compilation...
 set "BIN_DIR=bin"
@@ -54,10 +53,10 @@ if not exist "%BIN_DIR%" (
 ) else (
     echo Dossier 'bin' déjà présent
 )
-pause
 
-echo [4/5] Compilation de RunMain.java...
-"%JAVAC_EXEC%" -d "%BIN_DIR%" RunMain.java
+
+echo [4/5] Compilation de src/RunMain.java...
+"%JAVAC_EXEC%" -d "%BIN_DIR%" src/RunMain.java
 if errorlevel 1 (
     echo Échec de la compilation. Vérifiez votre code source.
     pause
@@ -65,9 +64,9 @@ if errorlevel 1 (
 ) else (
     echo Compilation réussie !
 )
-pause
 
-echo [5/5] Exécution de la classe RunMain...
+
+echo [5/5] Exécution de la classe src/RunMain...
 "%JAVA_EXEC%" -XX:+ShowCodeDetailsInExceptionMessages -cp "%BIN_DIR%" RunMain
 echo Exécution terminée.
 pause

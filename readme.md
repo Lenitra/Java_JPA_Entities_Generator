@@ -2,8 +2,13 @@
 1. Permet de générer les classes/enums entitées avec leurs dao interface et leur implication.
 2. Modifie les accès à la BDD persistence unit, et la bdd name. 
 3. Copie les documents générés dans votre projet InteliJ
+
 # USAGE
-## 0. Modifier le run.bat pour indiquer ou se situe votre JDK
+
+## 0. Configuration dossier `config` (à effectuer une seule fois)
+- `javapath.txt` : rensigner le chemin d'installation du dossier de votre JDK
+
+
 ## 1. Renseigner les entitées et les enums dans le fichier `entities.txt` sous le format :
 ```
 c:nomClasse
@@ -13,17 +18,20 @@ c:nomClasse
 e:nomEnum
 ```
 
-## 2. Renseigner les données dans `bddConf.txt`
+## 2. Renseigner les données dans `projectSettings.txt`
+**/!\ Ne pas mettre d'espaces**
 ```
-persistence_units=pu_judo
 database_name=JUDO_Database
+inteliJ_project_path=D:\Utilisateurs\thomas.lemartinel\Desktop\JavaAvance\toast
 ```
 
-## 3. Renseigner le chemin vers votre projet InteliJ dans `inteliJProjectPath.txt`
-Si le fichier est vide ou inexistant, aucune copie ne sera faite. Il est vide par défaut. Et vous pourrez quand même récupérer le template généré sous le nom `tmp/`
-```
-D:\Utilisateurs\thomas.lemartinel\Desktop\JavaAvance\toast
-```
+### Clefs
+- database_name : permet de configurer le application.properties
+- inteliJ_project_path : **racine** du projet généré par inteliJ
+- 
+
+*Obligatoire
+
 
 
 ## Se démerder pour compiler et executer `RunMain.java`

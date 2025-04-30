@@ -1,2 +1,0 @@
-persistence_units=
-database_name=

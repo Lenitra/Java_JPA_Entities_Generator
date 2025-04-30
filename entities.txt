@@ -1,0 +1,5 @@
+c:Personnage
+c:Sort
+c:Guilde
+e:TypeGuilde
+e:RangGuilde
