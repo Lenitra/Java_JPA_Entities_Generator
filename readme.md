@@ -1,7 +1,3 @@
-# Utilité :
-1. Permet de générer les classes/enums entitées avec leurs dao interface et leur implication.
-2. Modifie les accès à la BDD persistence unit, et la bdd name. 
-3. Copie les documents générés dans votre projet InteliJ
 
 # USAGE
 
@@ -34,4 +30,4 @@ inteliJ_project_path=D:\Utilisateurs\thomas.lemartinel\Desktop\JavaAvance\toast
 
 
 
-## Se démerder pour compiler et executer `RunMain.java`
+# Configuration du `application.properties` pas encore faite ! 
