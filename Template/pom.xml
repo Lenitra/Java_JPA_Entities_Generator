@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>net.ent.etrs</groupId>
-    <artifactId>GuilderMaster</artifactId>
+    <artifactId>App</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>GuilderMaster</name>
-    <description>GuilderMaster</description>
+    <name>App</name>
+    <description>App Springboot</description>
     <url/>
     <licenses>
         <license/>
