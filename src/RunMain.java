@@ -94,7 +94,6 @@ public class RunMain {
         List<String> starred = new ArrayList<>();
         List<String> fieldLines = new ArrayList<>();
         Pattern camelCaseBoundary = Pattern.compile("([a-z])([A-Z])");
-        // Pour extraire le contenu de <>
         Pattern genericPattern = Pattern.compile("<(.+?)>");
 
         // 1. Collecte des attributs
@@ -109,95 +108,64 @@ public class RunMain {
             if (parts.length >= 2) {
                 String type = parts[0];
                 String var = parts[1];
-                // snake_case pour la colonne
                 String col = camelCaseBoundary.matcher(var)
                         .replaceAll("$1_$2")
                         .toLowerCase();
                 String nullableAttr = isStar ? ", nullable=false" : "";
 
-                // 2. Cas des collections / relations
+                // 2. Cas relations (List/Set/Map/Collection)
                 if (type.startsWith("List") ||
                         type.startsWith("Set") ||
                         type.startsWith("Map") ||
                         type.startsWith("Collection")) {
 
-                    fieldLines.add("    @Getter");
-
-                    // extraire le(s) type(s) générique(s)
+                    // Récupération du générique
                     Matcher m = genericPattern.matcher(type);
-                    String generic = "";
-                    if (m.find()) {
-                        generic = m.group(1).trim(); // ex. "Foo" ou "Key, Value"
-                    }
-
-                    // names par défaut
+                    String generic = m.find() ? m.group(1).trim() : "";
                     String joinCol = tableName + "_id";
+                    String elemCol = camelCaseBoundary.matcher(generic)
+                            .replaceAll("$1_$2")
+                            .toLowerCase();
 
-                    // Map<K,V>
-                    if (type.startsWith("Map") && generic.contains(",")) {
-                        String[] params = generic.split("\\s*,\\s*");
-                        String keyType = params[0];
-                        String valueType = params[1];
+                    // TODO: Faire une vérification de cette partie pour une optimisation
+                    // --- Bloc OPTION OneToMany ---
+                    fieldLines.add("    // === OPTION OneToMany unidirectionnel ===");
+                    fieldLines.add("    // @OneToMany(fetch = FetchType.LAZY)");
+                    fieldLines.add("    // @ElementCollection");
+                    fieldLines.add("    // @CollectionTable(name = \"" + tableName + "_" + col + "\",");
+                    fieldLines.add("    //        joinColumns = @JoinColumn(name = \"" + joinCol + "\"))");
+                    fieldLines.add("");
 
-                        String keyCol = camelCaseBoundary.matcher(keyType)
-                                .replaceAll("$1_$2")
-                                .toLowerCase();
-                        String valueCol = camelCaseBoundary.matcher(valueType)
-                                .replaceAll("$1_$2")
-                                .toLowerCase();
+                    // --- Bloc OPTION ManyToMany ---
+                    fieldLines.add("    // === OPTION ManyToMany bidirectionnel ===");
+                    fieldLines.add("    // @ManyToMany");
+                    fieldLines.add("    // @JoinTable(name = \"" + tableName + "_" + col + "\",");
+                    fieldLines.add("    //            joinColumns = @JoinColumn(name = \"" + joinCol + "\"),");
+                    fieldLines.add("    //            inverseJoinColumns = @JoinColumn(name = \"" + col + "_" + elemCol
+                            + "\"))");
 
-                        fieldLines.add("    // TODO: relation Map via CollectionTable");
-                        fieldLines.add("    // @OneToMany");
-                        fieldLines.add("    // @ManyToMany");
-                        fieldLines.add("    // @ElementCollection");
-                        fieldLines.add("    // @CollectionTable(");
-                        fieldLines.add("    //     name = \"" + tableName + "_" + col + "\",");
-                        fieldLines.add("    //     joinColumns = @JoinColumn(name = \"" + joinCol + "\"),");
-                        fieldLines.add("    //     inverseJoinColumns = {");
-                        fieldLines.add("    //         @JoinColumn(name = \"" + col + "_" + keyCol + "\"),");
-                        fieldLines.add("    //         @JoinColumn(name = \"" + col + "_" + valueCol + "\")");
-                        fieldLines.add("    //     }");
-                        fieldLines.add("    // )");
-                    } else {
-                        // List<Entité> ou Set<Entité>
-                        String elemType = generic;
-                        String elemCol = camelCaseBoundary.matcher(elemType)
-                                .replaceAll("$1_$2")
-                                .toLowerCase();
-
-                        fieldLines.add("    // TODO: relation élément via CollectionTable");
-                        fieldLines.add("    // @OneToMany");
-                        fieldLines.add("    // @ManyToMany");
-                        fieldLines.add("    // @ElementCollection");
-                        fieldLines.add("    // @CollectionTable(");
-                        fieldLines.add("    //     name = \"" + tableName + "_" + col + "\",");
-                        fieldLines.add("    //     joinColumns = @JoinColumn(name = \"" + joinCol + "\"),");
-                        fieldLines.add(
-                                "    //     inverseJoinColumns = @JoinColumn(name = \"" + col + "_" + elemCol + "\")");
-                        fieldLines.add("    // )");
-                    }
+                    // Si tu veux un bloc Map<K,V>, rajoute ici un 3e bloc similaire…
                 }
-                // 3. Cas classique
+                // 3. Cas simple non-relationnel
                 else {
                     fieldLines.add("    @Getter @Setter");
-                    fieldLines.add("    // TODO: règles de gestion à valider");
-                    if (!nullableAttr.isEmpty()) {
+                    if (isStar)
                         fieldLines.add("    @NotNull");
-                    }
                     fieldLines.add("    @Column(name=\"" + col + "\"" + nullableAttr + ")");
                 }
 
                 String variable = attrRaw.replace("*", "");
-                // 4. Champ
+
                 fieldLines.add("    private " + variable + ";");
                 fieldLines.add("");
-                fieldLines.add("");
+
                 if (isStar)
                     starred.add(var);
             }
             j++;
         }
-        // 3. Génération de l’en-tête et des annotations de classe
+
+        // 4. Génération de l’en-tête & écriture du fichier (idem version précédente)
         sb.append("package app.model.entities;").append(nl).append(nl)
                 .append("import jakarta.persistence.*;").append(nl)
                 .append("import lombok.*;").append(nl)
@@ -205,15 +173,15 @@ public class RunMain {
                 .append("import org.springframework.format.annotation.DateTimeFormat;").append(nl).append(nl)
                 .append("@Entity").append(nl)
                 .append("@Table(name=\"").append(tableName).append("\"");
-
         if (!starred.isEmpty()) {
             String cols = starred.stream()
-                    .map(v -> camelCaseBoundary.matcher(v).replaceAll("$1_$2").toLowerCase())
-                    .map(s -> "\"" + s + "\"")
+                    .map(v -> "\"" + camelCaseBoundary.matcher(v)
+                            .replaceAll("$1_$2").toLowerCase() + "\"")
                     .collect(Collectors.joining(", "));
             String ucName = "uk_" + tableName + "_"
                     + starred.stream()
-                            .map(v -> camelCaseBoundary.matcher(v).replaceAll("$1_$2").toLowerCase())
+                            .map(v -> camelCaseBoundary.matcher(v)
+                                    .replaceAll("$1_$2").toLowerCase())
                             .collect(Collectors.joining("_"));
             sb.append(", uniqueConstraints=@UniqueConstraint(name=\"")
                     .append(ucName)
@@ -226,8 +194,8 @@ public class RunMain {
                 .append("@ToString(callSuper=false");
         if (!starred.isEmpty()) {
             String ofList = starred.stream()
-                    .map(v -> camelCaseBoundary.matcher(v).replaceAll("$1_$2").toLowerCase())
-                    .map(s -> "\"" + s + "\"")
+                    .map(v -> "\"" + camelCaseBoundary.matcher(v)
+                            .replaceAll("$1_$2").toLowerCase() + "\"")
                     .collect(Collectors.joining(", "));
             sb.append(", of={").append(ofList).append("}");
         }
@@ -235,24 +203,23 @@ public class RunMain {
                 .append("@EqualsAndHashCode(callSuper=true");
         if (!starred.isEmpty()) {
             String ofList = starred.stream()
-                    .map(v -> camelCaseBoundary.matcher(v).replaceAll("$1_$2").toLowerCase())
-                    .map(s -> "\"" + s + "\"")
+                    .map(v -> "\"" + camelCaseBoundary.matcher(v)
+                            .replaceAll("$1_$2").toLowerCase() + "\"")
                     .collect(Collectors.joining(", "));
             sb.append(", of={").append(ofList).append("}");
         }
-        sb.append(")").append(nl).append(nl).append(nl)
-        
+        sb.append(")").append(nl).append(nl)
                 .append("public class ").append(name)
                 .append(" extends AbstractPersistable<Long> {").append(nl).append(nl);
 
-        // 4. Insertion des champs
+        // Insertion des champs
         for (String fld : fieldLines) {
             sb.append(fld).append(nl);
         }
         sb.append("}").append(nl);
 
-        // 5. Écriture du fichier
-        Files.write(entityDir.resolve(name + ".java"), sb.toString().getBytes(StandardCharsets.UTF_8));
+        Files.write(entityDir.resolve(name + ".java"),
+                sb.toString().getBytes(StandardCharsets.UTF_8));
         showInfo("Entité générée: " + name);
     }
 
@@ -318,7 +285,7 @@ public class RunMain {
 
     private static void generateEnum(String name, Path enumDir) throws IOException {
         String src = "package app.model.entities.enums;" + System.lineSeparator() + System.lineSeparator()
-                + "public enum " + name + " { // TODO: valeurs }";
+                + "public enum " + name + " { Ajouter, des, valeurs, ici ,,}" + System.lineSeparator();
         Files.write(enumDir.resolve(name + ".java"), src.getBytes(StandardCharsets.UTF_8));
         showInfo("Enum généré: " + name);
     }
