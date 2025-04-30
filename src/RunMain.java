@@ -127,6 +127,8 @@ public class RunMain {
                             .replaceAll("$1_$2")
                             .toLowerCase();
 
+                    fieldLines.add("    //TODO: (Code) Ajouter les règles de gestion");
+
                     // TODO: Faire une vérification de cette partie pour une optimisation
                     // --- Bloc OPTION OneToMany ---
                     fieldLines.add("    // === OPTION OneToMany unidirectionnel ===");
@@ -149,6 +151,7 @@ public class RunMain {
                 // 3. Cas simple non-relationnel
                 else {
                     fieldLines.add("    @Getter @Setter");
+                    fieldLines.add("    //TODO: (Code) Ajouter les règles de gestion");
                     if (isStar)
                         fieldLines.add("    @NotNull");
                     fieldLines.add("    @Column(name=\"" + col + "\"" + nullableAttr + ")");
