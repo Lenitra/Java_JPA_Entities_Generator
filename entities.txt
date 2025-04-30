@@ -1,6 +1,14 @@
 c:Personnage
 - String nom*
+- int mana
+- int pdv
+- List<Sort> sortsListe
 c:Sort
+- String nom*
+- int cout
+- int niveauRequis
 c:Guilde
+- String nom*
+- Map<Personnage, RangGuilde> membres
 e:TypeGuilde
 e:RangGuilde

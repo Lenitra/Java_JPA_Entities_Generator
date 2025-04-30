@@ -1,4 +1,4 @@
-package app.model.services;
+package app.model.services.interfaces;
 
 
 import app.model.services.exceptions.ServiceException;
