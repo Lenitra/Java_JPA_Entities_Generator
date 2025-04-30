@@ -27,12 +27,10 @@ public class RunMain {
             Path entityDir = tmpDir.resolve("src/main/java/entities");
             Path daoDir = tmpDir.resolve("src/main/java/dao");
             Path metierDirImpl = tmpDir.resolve("src/main/java/metier/metierImpl");
-            Path daoImplDir = daoDir.resolve("bdd");
             Path referenceDir = entityDir.resolve("enums");
 
             Files.createDirectories(entityDir);
             Files.createDirectories(daoDir);
-            Files.createDirectories(daoImplDir);
             Files.createDirectories(referenceDir);
 
             // 2. Process entities.txt
@@ -72,7 +70,7 @@ public class RunMain {
                             + "@NoArgsConstructor (access = AccessLevel.PROTECTED)" + System.lineSeparator()
                             + "//TODO: Configurer les arguments qui seront affichés sur le ToString"
                             + System.lineSeparator()
-                            + "@ToString(callSuper = true, of = {\"TODO\", \"mettre une liste d'arguments\"})"
+                            + "@ToString(callSuper = false, of = {\"TODO\", \"mettre une liste d'arguments\"})"
                             + System.lineSeparator()
                             + "//TODO: Configurer les arguments qui seront marque d'unicité" + System.lineSeparator()
                             + "@EqualsAndHashCode(callSuper = true, of = {\"TODO\", \"mettre une liste d'arguments\"})"
@@ -80,29 +78,23 @@ public class RunMain {
                             + "@RequiredArgsConstructor (access = AccessLevel.PROTECTED)" + System.lineSeparator()
                             + System.lineSeparator()
 
-                            + "public class " + name + " extends AbstractEntity {"
+                            + "public class " + name + " extends AbstractPersistable<Long> {"
                             + System.lineSeparator() + System.lineSeparator()
                             + "}" + System.lineSeparator();
                     Files.write(entityDir.resolve(name + ".java"), entitySrc.getBytes(StandardCharsets.UTF_8));
 
-                    // DAO interface
-                    String daoSrc = "package dao;" + System.lineSeparator()
-                            + System.lineSeparator()
-                            + "public interface " + name + "Dao extends Dao<" + name + "> {" + System.lineSeparator()
-                            + "}" + System.lineSeparator();
-                    Files.write(daoDir.resolve(name + "Dao.java"), daoSrc.getBytes(StandardCharsets.UTF_8));
 
-                    // DAO implementation
-                    String implSrc = "package dao.bdd;" + System.lineSeparator()
+
+                    // DAO de chaque entité
+                    String implSrc = "package dao;" + System.lineSeparator()
                             + System.lineSeparator()
                             + "import entities." + name + ";" + System.lineSeparator()
-                            + "import dao." + name + "Dao;" + System.lineSeparator()
                             + System.lineSeparator()
-                            + "public class " + name + "DaoImpl extends AbstractDaoImpl<" + name + "> implements "
-                            + name + "Dao {" + System.lineSeparator()
+                            + System.lineSeparator()
+                            + "@Repository" + System.lineSeparator()
+                            + "public interface " + name + "Dao extends JpaRepository<" + name + ", Long> {" + System.lineSeparator()
                             + "}" + System.lineSeparator();
-                    Files.write(daoImplDir.resolve(name + "DaoImpl.java"), implSrc.getBytes(StandardCharsets.UTF_8));
-
+                    Files.write(daoDir.resolve(name + "DaoImpl.java"), implSrc.getBytes(StandardCharsets.UTF_8));
                 }
 
                 else if (line.startsWith("e:")) {
@@ -134,10 +126,12 @@ public class RunMain {
                 String line = raw.trim().replace(" ", "");
                 if (line.startsWith("c:")) {
                     String name = line.substring(2);
-                    entityFactorySrc += "    public static" + name + " fabriquer" + name + "() {" + System.lineSeparator()
+                    entityFactorySrc += "    public static " + name + " fabriquer" + name + "() {" + System.lineSeparator()
+                            + "        private " + name + " " + name.toLowerCase() + " = new " + name + "();" + System.lineSeparator()
                             + "        // TODO: Appeller les setters ici" + System.lineSeparator()
-                            + "        return new " + name + "();" + System.lineSeparator()
-                            + "    }" + System.lineSeparator();
+                            + "        return new " + name.toLowerCase()+ ";" + System.lineSeparator()
+                            + "    }" + System.lineSeparator()
+                            + "}" + System.lineSeparator();
                 }
             }
 
