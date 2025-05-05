@@ -74,6 +74,7 @@ public class RunMain {
                     showWarn("Ligne non reconnue dans entities.txt : " + raw);
                 }
             }
+            generateEntityFactory(lines, entityDir);
 
             // Nettoyage et configuration
             deleteNoneFiles(tmpDir);
@@ -116,6 +117,74 @@ public class RunMain {
         Files.write(enumDir.resolve(name + ".java"),
                 sb.toString().getBytes(StandardCharsets.UTF_8));
         showInfo("Enum généré: " + name);
+    }
+
+    private static void generateEntityFactory(List<String> lines, Path entityDir) throws IOException {
+        String nl = System.lineSeparator();
+        StringBuilder sb = new StringBuilder();
+
+        // en-tête de la factory
+        sb.append("package app.model.factories;").append(nl).append(nl)
+                .append("import app.model.entities.*;").append(nl).append(nl)
+                .append("public class EntityFactory {").append(nl).append(nl);
+
+        // pour chaque entité déclarée dans entities.txt
+        for (int i = 0; i < lines.size(); i++) {
+            String raw = lines.get(i).trim();
+            if (!raw.startsWith("c:"))
+                continue;
+
+            String name = raw.substring(2).trim();
+            List<String> params = new ArrayList<>();
+            List<String> setters = new ArrayList<>();
+
+            // collecte des attributs qui suivent, en sautant les List/Set/Map/Collection
+            int j = i + 1;
+            while (j < lines.size() && lines.get(j).trim().startsWith("-")) {
+                String attr = lines.get(j).trim().substring(1).trim();
+                if (attr.endsWith("*")) {
+                    attr = attr.substring(0, attr.length() - 1).trim();
+                }
+                String[] parts = attr.split("\\s+");
+                if (parts.length >= 2) {
+                    String type = parts[0];
+                    String var = parts[1];
+                    // ne pas gérer les collections
+                    if (type.startsWith("List") ||
+                            type.startsWith("Set") ||
+                            type.startsWith("Map") ||
+                            type.startsWith("Collection")) {
+                        j++;
+                        continue;
+                    }
+                    params.add(type + " " + var);
+                    String method = "set" + Character.toUpperCase(var.charAt(0)) + var.substring(1);
+                    setters.add("        obj." + method + "(" + var + ");");
+                }
+                j++;
+            }
+
+            // génération de la méthode createNomEntité(...)
+            sb.append("    public static ").append(name)
+                    .append(" create").append(name).append("(")
+                    .append(String.join(", ", params)).append(") {").append(nl)
+                    .append("        ").append(name).append(" obj = new ").append(name).append("();").append(nl);
+            for (String s : setters) {
+                sb.append(s).append(nl);
+            }
+            sb.append("        return obj;").append(nl)
+                    .append("    }").append(nl).append(nl);
+
+            // on saute les lignes d'attributs
+            i = j - 1;
+        }
+
+        sb.append("}").append(nl);
+
+        // écriture du fichier EntityFactory.java
+        Files.write(entityDir.resolve("EntityFactory.java"),
+                sb.toString().getBytes(StandardCharsets.UTF_8));
+        showInfo("EntityFactory générée");
     }
 
     private static void generateEntity(String name, List<String> lines, int idxStart, Path entityDir)
@@ -288,7 +357,7 @@ public class RunMain {
         String src = "package app.model.services;" + System.lineSeparator()
                 + "import app.model.dao." + name + "Dao;" + System.lineSeparator()
                 + "import app.model.entities." + name + ";" + System.lineSeparator()
-                + "import app.model.services.interfaces.I"+name+"Service;"
+                + "import app.model.services.interfaces.I" + name + "Service;"
                 + "import org.springframework.stereotype.Service;" + System.lineSeparator() + System.lineSeparator()
                 + "@Service" + System.lineSeparator()
                 + "public class " + name + "Service extends AbstractService<" + name + "," + name
@@ -317,15 +386,18 @@ public class RunMain {
                 + "public class " + name + "Commands {" + System.lineSeparator()
                 + "    @NonNull private final I" + name + "Service " + varName + ";" + System.lineSeparator()
                 + "    @NonNull private final Terminal terminal;" + System.lineSeparator() + System.lineSeparator()
-                + "    @ShellMethod(value = \"Permet de lister les "+name.toLowerCase()+"\", key = \""+name.toLowerCase()+"-list\")" + System.lineSeparator()
+                + "    @ShellMethod(value = \"Permet de lister les " + name.toLowerCase() + "\", key = \""
+                + name.toLowerCase() + "-list\")" + System.lineSeparator()
                 + "    public void lister(){" + System.lineSeparator()
                 + "        try {" + System.lineSeparator()
-                + "            Iterable<"+name+"> les"+name+" = "+name.toLowerCase()+"Service.findAll();" + System.lineSeparator()
-                + "            for ("+name+" obj : les"+name+"){" + System.lineSeparator()
+                + "            Iterable<" + name + "> les" + name + " = " + name.toLowerCase() + "Service.findAll();"
+                + System.lineSeparator()
+                + "            for (" + name + " obj : les" + name + "){" + System.lineSeparator()
                 + "                terminal.writer().println(obj.toString());" + System.lineSeparator()
                 + "            }" + System.lineSeparator()
-                + "            terminal.writer().println(\"Nombre de "+name.toLowerCase()+" : \" + "+name.toLowerCase()+"Service.count());"+ System.lineSeparator()
-                + "            terminal.flush();"+ System.lineSeparator()
+                + "            terminal.writer().println(\"Nombre de " + name.toLowerCase() + " : \" + "
+                + name.toLowerCase() + "Service.count());" + System.lineSeparator()
+                + "            terminal.flush();" + System.lineSeparator()
                 + "        } catch (ServiceException e) {throw new RuntimeException(e);}" + System.lineSeparator()
                 + "    }" + System.lineSeparator()
                 + "}";

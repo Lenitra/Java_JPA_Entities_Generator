@@ -1,5 +1,6 @@
 c:Personnage
-- String nom*
+- String pseudo*
+- int niveau
 - int mana
 - int pdv
 - List<Sort> sortsListe
@@ -9,6 +10,7 @@ c:Sort
 - int niveauRequis
 c:Guilde
 - String nom*
+- LocalDate dateCreation
 - Map<Personnage, RangGuilde> membres
 e:TypeGuilde
 e:RangGuilde
