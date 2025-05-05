@@ -13,7 +13,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class RunMain {
-    private static final Set<String> entityNames = new HashSet<>();
 
     public static void main(String[] args) {
         showInfo("Démarrage de la génération de code");
@@ -322,7 +321,7 @@ public class RunMain {
         if (configs.containsKey(dbKey) && !configs.get(dbKey).isEmpty())
             changeDatabaseNameConfig(configs.get(dbKey), propertiesFile);
         else if (configs.containsKey(dbKey))
-            showWarn("database_name vide, conservé");
+            showWarn("database_name vide, valeur par défaut laissee");
         else
             showWarn("Clé 'database_name' non trouvée");
 
@@ -330,7 +329,7 @@ public class RunMain {
         if (configs.containsKey(ideKey) && !configs.get(ideKey).isEmpty())
             copyDirectory(tmpDir, Paths.get(configs.get(ideKey)));
         else if (configs.containsKey(ideKey))
-            showWarn("intellij_project_path vide");
+            showWarn("intellij_project_path vide, le template genere se trouve dans /tmp");
         else
             showWarn("Clé 'intellij_project_path' non trouvée");
 
@@ -388,10 +387,13 @@ public class RunMain {
     }
 
     private static void showWarn(String msg) {
-        System.out.println("[WARN] " + msg);
+        System.out.println("******************************************************* WARNING *******************************************************");
+        System.out.println("[WARN] " + msg + "\n");
     }
 
     private static void showError(String msg) {
-        System.err.println("[ERROR] " + msg);
+        System.err.println("******************************************************* ERROR *******************************************************");
+        System.err.println("[ERROR] " + msg + "\n");
+
     }
 }
