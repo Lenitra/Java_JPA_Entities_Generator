@@ -288,7 +288,7 @@ public class RunMain {
         String src = "package app.model.services;" + System.lineSeparator()
                 + "import app.model.dao." + name + "Dao;" + System.lineSeparator()
                 + "import app.model.entities." + name + ";" + System.lineSeparator()
-                +"import app.model.services.interfaces.I"+name+"Service;"
+                + "import app.model.services.interfaces.I"+name+"Service;"
                 + "import org.springframework.stereotype.Service;" + System.lineSeparator() + System.lineSeparator()
                 + "@Service" + System.lineSeparator()
                 + "public class " + name + "Service extends AbstractService<" + name + "," + name
