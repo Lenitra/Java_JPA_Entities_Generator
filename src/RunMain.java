@@ -68,7 +68,8 @@ public class RunMain {
                     i = skipAttributes(lines, i);
                 } else if (raw.startsWith("e:")) {
                     String name = raw.substring(2).trim();
-                    generateEnum(name, enumDir);
+                    generateEnum(name, lines, i, enumDir);
+                    i = skipAttributes(lines, i);
                 } else if (!raw.isEmpty() && !raw.startsWith("-")) {
                     showWarn("Ligne non reconnue dans entities.txt : " + raw);
                 }
@@ -83,6 +84,38 @@ public class RunMain {
             e.printStackTrace();
             System.exit(1);
         }
+    }
+
+    // 2. Nouvelle signature pour prendre en compte les lignes suivantes :
+    private static void generateEnum(String name, List<String> lines, int idxStart, Path enumDir) throws IOException {
+        String nl = System.lineSeparator();
+        StringBuilder sb = new StringBuilder();
+
+        // Collecte des valeurs de l'enum
+        List<String> values = new ArrayList<>();
+        int j = idxStart + 1;
+        while (j < lines.size() && lines.get(j).trim().startsWith("-")) {
+            String rawVal = lines.get(j).trim().replaceFirst("^-+", "").trim();
+            // Normalisation : majuscules et underscores
+            String enumConst = rawVal
+                    .toUpperCase()
+                    .replaceAll("\\s+", "_");
+            values.add(enumConst);
+            j++;
+        }
+
+        // Construction du contenu de l'enum
+        sb.append("package app.model.entities.enums;").append(nl).append(nl)
+                .append("public enum ").append(name).append(" { ");
+        if (!values.isEmpty()) {
+            sb.append(String.join(", ", values));
+        }
+        sb.append("; }").append(nl);
+
+        // Écriture du fichier
+        Files.write(enumDir.resolve(name + ".java"),
+                sb.toString().getBytes(StandardCharsets.UTF_8));
+        showInfo("Enum généré: " + name);
     }
 
     private static void generateEntity(String name, List<String> lines, int idxStart, Path entityDir)
@@ -387,12 +420,14 @@ public class RunMain {
     }
 
     private static void showWarn(String msg) {
-        System.out.println("******************************************************* WARNING *******************************************************");
+        System.out.println(
+                "******************************************************* WARNING *******************************************************");
         System.out.println("[WARN] " + msg + "\n");
     }
 
     private static void showError(String msg) {
-        System.err.println("******************************************************* ERROR *******************************************************");
+        System.err.println(
+                "******************************************************* ERROR *******************************************************");
         System.err.println("[ERROR] " + msg + "\n");
 
     }

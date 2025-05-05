@@ -12,3 +12,6 @@ c:Guilde
 - Map<Personnage, RangGuilde> membres
 e:TypeGuilde
 e:RangGuilde
+- MAITRE
+- OFFICIER
+- MEMBRE

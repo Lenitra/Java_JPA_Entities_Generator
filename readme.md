@@ -5,10 +5,17 @@
 - `javapath.txt` : rensigner le chemin d'installation du dossier de votre JDK
 
 
-## 1. Renseigner les entitées et les enums dans le fichier `entities.txt` sous le format :
+## 1. Renseigner les entitées suivies de leurs attributs et les enums dans le fichier `entities.txt` sous le format :
+Ajout d'un "*" pour signifier l'unicité
+
 ```
-c:nomClasse
+c:Personnage
+- String nom*
+- int age
+- List<String> exemples 
 e:nomEnum
+- ENUM1
+- ENUM2
 c:nomClasse
 c:nomClasse
 e:nomEnum
