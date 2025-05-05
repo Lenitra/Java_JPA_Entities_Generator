@@ -302,28 +302,35 @@ public class RunMain {
 
     private static void generateCommands(String name, Path commandsDir) throws IOException {
         String varName = Character.toLowerCase(name.charAt(0)) + name.substring(1) + "Service";
-        String src = "package app.model.commands;" + System.lineSeparator()
+        String src = "package app.model.commands;" + System.lineSeparator() + System.lineSeparator()
                 + "import app.model.services.interfaces.I" + name + "Service;" + System.lineSeparator()
+                + "import app.model.entities." + name + ";" + System.lineSeparator()
                 + "import lombok.NonNull;" + System.lineSeparator()
                 + "import lombok.RequiredArgsConstructor;" + System.lineSeparator()
                 + "import org.jline.terminal.Terminal;" + System.lineSeparator()
                 + "import org.springframework.shell.standard.ShellComponent;" + System.lineSeparator()
+                + "import org.springframework.shell.standard.ShellMethod;" + System.lineSeparator()
+                + "import app.model.services.exceptions.ServiceException;" + System.lineSeparator()
                 + System.lineSeparator()
                 + "@ShellComponent" + System.lineSeparator()
                 + "@RequiredArgsConstructor" + System.lineSeparator()
                 + "public class " + name + "Commands {" + System.lineSeparator()
                 + "    @NonNull private final I" + name + "Service " + varName + ";" + System.lineSeparator()
-                + "    @NonNull private final Terminal terminal;" + System.lineSeparator()
+                + "    @NonNull private final Terminal terminal;" + System.lineSeparator() + System.lineSeparator()
+                + "    @ShellMethod(value = \"Permet de lister les "+name.toLowerCase()+"\", key = \""+name.toLowerCase()+"-list\")" + System.lineSeparator()
+                + "    public void lister(){" + System.lineSeparator()
+                + "        try {" + System.lineSeparator()
+                + "            Iterable<"+name+"> les"+name+" = "+name.toLowerCase()+"Service.findAll();" + System.lineSeparator()
+                + "            for ("+name+" obj : les"+name+"){" + System.lineSeparator()
+                + "                terminal.writer().println(obj.toString());" + System.lineSeparator()
+                + "            }" + System.lineSeparator()
+                + "            terminal.writer().println(\"Nombre de "+name.toLowerCase()+" : \" + "+name.toLowerCase()+"Service.count());"+ System.lineSeparator()
+                + "            terminal.flush();"+ System.lineSeparator()
+                + "        } catch (ServiceException e) {throw new RuntimeException(e);}" + System.lineSeparator()
+                + "    }" + System.lineSeparator()
                 + "}";
         Files.write(commandsDir.resolve(name + "Commands.java"), src.getBytes(StandardCharsets.UTF_8));
         showInfo("Commands générés: " + name + "Commands");
-    }
-
-    private static void generateEnum(String name, Path enumDir) throws IOException {
-        String src = "package app.model.entities.enums;" + System.lineSeparator() + System.lineSeparator()
-                + "public enum " + name + " { Ajouter, des, valeurs, ici ,,}" + System.lineSeparator();
-        Files.write(enumDir.resolve(name + ".java"), src.getBytes(StandardCharsets.UTF_8));
-        showInfo("Enum généré: " + name);
     }
 
     private static void deleteNoneFiles(Path start) throws IOException {
