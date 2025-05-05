@@ -125,7 +125,9 @@ public class RunMain {
 
         // en-tête de la factory
         sb.append("package app.model.factories;").append(nl).append(nl)
-                .append("import app.model.entities.*;").append(nl).append(nl)
+                .append("import lombok.AccessLevel;").append(nl)
+                .append("import lombok.NoArgsConstructor;").append(nl).append(nl)
+                .append("@NoArgsConstructor(access = AccessLevel.PRIVATE)").append(nl).append(nl)
                 .append("public class EntityFactory {").append(nl).append(nl);
 
         // pour chaque entité déclarée dans entities.txt
