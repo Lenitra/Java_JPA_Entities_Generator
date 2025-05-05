@@ -6,7 +6,6 @@
 
 
 ## 1. Renseigner les entitées suivies de leurs attributs et les enums dans le fichier `entities.txt` sous le format :
-Ajout d'un "*" pour signifier l'unicité
 
 ```
 c:Personnage
@@ -20,6 +19,7 @@ c:nomClasse
 c:nomClasse
 e:nomEnum
 ```
+Ajout d'un "*" pour signifier l'unicité
 
 ## 2. Renseigner les données dans `projectSettings.txt`
 **/!\ Ne pas mettre d'espaces**
