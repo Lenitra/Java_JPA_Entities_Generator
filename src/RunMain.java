@@ -204,129 +204,138 @@ public class RunMain {
         // 1. Collecte des attributs
         int j = idxStart + 1;
         while (j < lines.size() && lines.get(j).trim().startsWith("-")) {
-            String attrRaw = lines.get(j).trim().replaceFirst("^-+", "").trim();
-            boolean isStar = attrRaw.endsWith("*");
-            if (isStar)
-                attrRaw = attrRaw.substring(0, attrRaw.length() - 1).trim();
+            String raw = lines.get(j).trim().substring(1).trim();
+            boolean required = raw.endsWith("*");
+            if (required) {
+                raw = raw.substring(0, raw.length() - 1).trim();
+            }
 
-            String[] parts = attrRaw.split("\\s+");
-            if (parts.length >= 2) {
-                String type = parts[0];
-                String var = parts[1];
-                String col = camelCaseBoundary.matcher(var)
-                        .replaceAll("$1_$2")
-                        .toLowerCase();
-                String nullableAttr = isStar ? ", nullable=false" : "";
+            String[] parts = raw.split("\\s+");
+            if (parts.length < 2) {
+                j++;
+                continue;
+            }
+            String type = parts[0];
+            String var = parts[1];
+            String col = camelCaseBoundary.matcher(var).replaceAll("$1_$2").toLowerCase();
+            String nullable = required ? ", nullable=false" : "";
+            Matcher m = genericPattern.matcher(type);
 
-                // 2. Cas relations (List/Set/Map/Collection)
-                if (type.startsWith("List") ||
-                        type.startsWith("Set") ||
-                        type.startsWith("Map") ||
-                        type.startsWith("Collection")) {
-
-                    // Récupération du générique
-                    Matcher m = genericPattern.matcher(type);
-                    String generic = m.find() ? m.group(1).trim() : "";
-                    String joinCol = tableName + "_id";
-                    String elemCol = camelCaseBoundary.matcher(generic)
-                            .replaceAll("$1_$2")
-                            .toLowerCase();
-
-                    fieldLines.add("    //TODO: (Code) Ajouter les règles de gestion");
-
-                    // TODO: Faire une vérification de cette partie pour une optimisation
-                    // --- Bloc OPTION OneToMany ---
-                    fieldLines.add("    // === OPTION OneToMany unidirectionnel ===");
-                    fieldLines.add("    // @OneToMany(fetch = FetchType.LAZY)");
-                    fieldLines.add("    // @ForeignKey(name = \"fk_" + tableName + "_" + col + "\")");
-                    fieldLines.add("    // @ElementCollection");
-                    fieldLines.add("    // @CollectionTable(name = \"" + tableName + "_" + col + "\",");
-                    fieldLines.add("    //        joinColumns = @JoinColumn(name = \"" + joinCol + "\"))");
-                    fieldLines.add("");
-
-                    // --- Bloc OPTION ManyToMany ---
-                    fieldLines.add("    // === OPTION ManyToMany bidirectionnel ===");
-                    fieldLines.add("    // @ManyToMany");
-                    fieldLines.add("    // @JoinTable(name = \"" + tableName + "_" + col + "\",");
-                    fieldLines.add("    //            joinColumns = @JoinColumn(name = \"" + joinCol + "\"),");
-                    fieldLines.add("    //            inverseJoinColumns = @JoinColumn(name = \"" + col + "_" + elemCol
-                            + "\"))");
-                    fieldLines.add("    @Getter");
-
-                    // Si tu veux un bloc Map<K,V>, rajoute ici un 3e bloc similaire…
+            // 2. OneToMany unidirectionnel (List<Entité> ou Set<Entité>)
+            if ((type.startsWith("List") || type.startsWith("Set")) && m.find()) {
+                String elt = m.group(1).trim();
+                String fk = tableName + "_id";
+                fieldLines
+                        .add("    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)");
+                fieldLines.add("    @JoinColumn(name = \"" + fk + "\", foreignKey = @ForeignKey(name = \"fk_"
+                        + tableName + "_" + var + "\"))");
+                if (type.startsWith("List")) {
+                    fieldLines.add("    @OrderColumn(name = \"" + var + "_order\")");
                 }
-                // 3. Cas simple non-relationnel
-                else {
-                    fieldLines.add("    @Getter @Setter");
-                    if (type.startsWith("String")){
-                        fieldLines.add("    @NotBlank(message = \"Ne peut pas etre vide\")");
-                    }
-                    fieldLines.add("    //TODO: (Code) Ajouter les règles de gestion");
-                    if (isStar)
-                        fieldLines.add("    @NotNull");
-                    fieldLines.add("    @Column(name=\"" + col + "\"" + nullableAttr + ")");
-                }
-
-                String variable = attrRaw.replace("*", "");
-
-                fieldLines.add("    private " + variable + ";");
+                fieldLines.add("    private " + type + " " + var + " = new "
+                        + (type.startsWith("List") ? "ArrayList<>()" : "HashSet<>()") + ";");
                 fieldLines.add("");
-
-                if (isStar)
-                    starred.add(var);
+            }
+            // 3. ManyToMany bidirectionnel (Set<Entité>)
+            else if (type.startsWith("Set") && m.find()) {
+                String elt = m.group(1).trim();
+                String jt = tableName + "_" + var;
+                fieldLines.add("    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)");
+                fieldLines.add("    @JoinTable(name = \"" + jt + "\",");
+                fieldLines.add("        joinColumns = @JoinColumn(name = \"" + tableName
+                        + "_id\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var + "\")),");
+                fieldLines.add("        inverseJoinColumns = @JoinColumn(name = \"" + var
+                        + "_id\", foreignKey = @ForeignKey(name = \"fk_" + var + "_" + tableName + "\"))");
+                fieldLines.add("    )");
+                fieldLines.add("    private Set<" + elt + "> " + var + " = new HashSet<>();");
+                fieldLines.add("");
+            }
+            // 4. ElementCollection pour Map<K,V>
+            else if (type.startsWith("Map") && m.find()) {
+                String[] kv = m.group(1).split(",");
+                String kt = kv[0].trim();
+                String vt = kv[1].trim();
+                String tbl = tableName + "_" + var;
+                String fk = tableName + "_id";
+                fieldLines.add("    @ElementCollection(fetch = FetchType.LAZY)");
+                fieldLines.add("    @CollectionTable(name = \"" + tbl + "\", joinColumns = @JoinColumn(name = \"" + fk
+                        + "\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var + "\")))");
+                fieldLines.add("    @MapKeyColumn(name = \"" + var + "_key\")");
+                fieldLines.add("    @Column(name = \"" + var + "_value\")");
+                fieldLines.add("    private Map<" + kt + ", " + vt + "> " + var + " = new HashMap<>();");
+                fieldLines.add("");
+            }
+            // 5. ElementCollection pour List<Type> ou Set<Type> de basiques
+            else if ((type.startsWith("List") || type.startsWith("Set") || type.startsWith("Collection"))) {
+                String coll = type.startsWith("List") ? "List" : "Set";
+                String elt = m.find() ? m.group(1).trim() : "String";
+                String tbl = tableName + "_" + var;
+                String fk = tableName + "_id";
+                fieldLines.add("    @ElementCollection(fetch = FetchType.LAZY)");
+                fieldLines.add("    @CollectionTable(name = \"" + tbl + "\", joinColumns = @JoinColumn(name = \"" + fk
+                        + "\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var + "\")))");
+                fieldLines.add("    private " + coll + "<" + elt + "> " + var + " = new "
+                        + (coll.equals("List") ? "ArrayList<>()" : "HashSet<>()") + ";");
+                fieldLines.add("");
+            }
+            // 6. Champ simple non-relationnel
+            else {
+                fieldLines.add("    @Getter @Setter");
+                if ("String".equals(type)) {
+                    fieldLines.add("    @NotBlank(message = \"Ne peut pas être vide\")");
+                }
+                if (required) {
+                    fieldLines.add("    @NotNull");
+                }
+                fieldLines.add("    @Column(name = \"" + col + "\"" + nullable + ")");
+                fieldLines.add("    private " + type + " " + var + ";");
+                fieldLines.add("");
+            }
+            if (required) {
+                starred.add(var);
             }
             j++;
         }
 
-        // 4. Génération de l’en-tête & écriture du fichier (idem version précédente)
+        // 4. Génération de l’en-tête & écriture du fichier
         sb.append("package app.model.entities;").append(nl).append(nl)
                 .append("import jakarta.persistence.*;").append(nl)
                 .append("import lombok.*;").append(nl)
                 .append("import org.springframework.data.jpa.domain.AbstractPersistable;").append(nl)
                 .append("import jakarta.validation.constraints.NotBlank;").append(nl)
-                .append("import java.time.LocalDate;").append(nl)
                 .append("import jakarta.validation.constraints.NotNull;").append(nl)
                 .append("import java.util.*;").append(nl)
                 .append("import app.model.entities.enums.*;").append(nl)
+                .append("import java.time.LocalDate;").append(nl)
                 .append("import org.springframework.format.annotation.DateTimeFormat;").append(nl).append(nl)
                 .append("@Entity").append(nl)
                 .append("@Table(name=\"").append(tableName).append("\"");
         if (!starred.isEmpty()) {
             String cols = starred.stream()
-                    .map(v -> "\"" + camelCaseBoundary.matcher(v)
-                            .replaceAll("$1_$2").toLowerCase() + "\"")
+                    .map(v -> "\"" + camelCaseBoundary.matcher(v).replaceAll("$1_$2").toLowerCase() + "\"")
                     .collect(Collectors.joining(", "));
-            String ucName = "uk_" + tableName + "_"
-                    + starred.stream()
-                            .map(v -> camelCaseBoundary.matcher(v)
-                                    .replaceAll("$1_$2").toLowerCase())
-                            .collect(Collectors.joining("_"));
+            String uc = "uk_" + tableName + "_" + starred.stream()
+                    .map(v -> camelCaseBoundary.matcher(v).replaceAll("$1_$2").toLowerCase())
+                    .collect(Collectors.joining("_"));
             sb.append(", uniqueConstraints=@UniqueConstraint(name=\"")
-                    .append(ucName)
-                    .append("\", columnNames={")
-                    .append(cols)
-                    .append("})");
+                    .append(uc).append("\", columnNames={").append(cols).append("})");
         }
         sb.append(")").append(nl)
-            .append("@NoArgsConstructor(access=AccessLevel.PROTECTED)").append(nl)
-            .append("@ToString(callSuper=true");
+                .append("@NoArgsConstructor(access=AccessLevel.PROTECTED)").append(nl)
+                .append("@ToString(callSuper=true");
         if (!starred.isEmpty()) {
-            String ofList = starred.stream()
-                .map(v -> "\"" + v + "\"")
-                .collect(Collectors.joining(", "));
-            sb.append(", of={").append(ofList).append("}");
+            String of = starred.stream().map(v -> "\"" + v + "\"").collect(Collectors.joining(", "));
+            sb.append(", of={").append(of).append("}");
         }
         sb.append(")").append(nl)
-            .append("@EqualsAndHashCode(callSuper=false");
+                .append("@EqualsAndHashCode(callSuper=false");
         if (!starred.isEmpty()) {
-            String ofList = starred.stream()
-                .map(v -> "\"" + v + "\"")
-                .collect(Collectors.joining(", "));
-            sb.append(", of={").append(ofList).append("}");
+            String of = starred.stream().map(v -> "\"" + v + "\"").collect(Collectors.joining(", "));
+            sb.append(", of={").append(of).append("}");
         }
         sb.append(")").append(nl).append(nl)
-                .append("public class ").append(name)
-                .append(" extends AbstractPersistable<Long> {").append(nl).append(nl);
+                .append("public class ").append(name).append(" extends AbstractPersistable<Long> {").append(nl)
+                .append(nl);
 
         // Insertion des champs
         for (String fld : fieldLines) {
@@ -334,8 +343,7 @@ public class RunMain {
         }
         sb.append("}").append(nl);
 
-        Files.write(entityDir.resolve(name + ".java"),
-                sb.toString().getBytes(StandardCharsets.UTF_8));
+        Files.write(entityDir.resolve(name + ".java"), sb.toString().getBytes(StandardCharsets.UTF_8));
         showInfo("Entité générée: " + name);
     }
 
@@ -369,7 +377,7 @@ public class RunMain {
         String src = "package app.model.services;" + System.lineSeparator()
                 + "import app.model.dao." + name + "Dao;" + System.lineSeparator()
                 + "import app.model.entities." + name + ";" + System.lineSeparator()
-                + "import app.model.services.interfaces.I" + name + "Service;" + System.lineSeparator() 
+                + "import app.model.services.interfaces.I" + name + "Service;" + System.lineSeparator()
                 + "import org.springframework.stereotype.Service;" + System.lineSeparator() + System.lineSeparator()
                 + "@Service" + System.lineSeparator()
                 + "public class " + name + "Service extends AbstractService<" + name + "," + name
