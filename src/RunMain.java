@@ -236,6 +236,7 @@ public class RunMain {
                     // --- Bloc OPTION OneToMany ---
                     fieldLines.add("    // === OPTION OneToMany unidirectionnel ===");
                     fieldLines.add("    // @OneToMany(fetch = FetchType.LAZY)");
+                    fieldLines.add("    // @ForeignKey(name = \"fk_" + tableName + "_" + col + "\")");
                     fieldLines.add("    // @ElementCollection");
                     fieldLines.add("    // @CollectionTable(name = \"" + tableName + "_" + col + "\",");
                     fieldLines.add("    //        joinColumns = @JoinColumn(name = \"" + joinCol + "\"))");
@@ -254,6 +255,9 @@ public class RunMain {
                 // 3. Cas simple non-relationnel
                 else {
                     fieldLines.add("    @Getter @Setter");
+                    if (type.startsWith("String")){
+                        fieldLines.add("@NotBlank(message = \"Ne peut pas être vide\")");
+                    }
                     fieldLines.add("    //TODO: (Code) Ajouter les règles de gestion");
                     if (isStar)
                         fieldLines.add("    @NotNull");
@@ -297,7 +301,7 @@ public class RunMain {
         }
         sb.append(")").append(nl)
                 .append("@NoArgsConstructor(access=AccessLevel.PROTECTED)").append(nl)
-                .append("@ToString(callSuper=false");
+                .append("@ToString(callSuper=true");
         if (!starred.isEmpty()) {
             String ofList = starred.stream()
                     .map(v -> "\"" + camelCaseBoundary.matcher(v)
