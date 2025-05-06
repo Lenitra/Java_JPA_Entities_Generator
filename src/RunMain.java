@@ -306,7 +306,7 @@ public class RunMain {
             sb.append(", of={").append(ofList).append("}");
         }
         sb.append(")").append(nl)
-                .append("@EqualsAndHashCode(callSuper=true");
+                .append("@EqualsAndHashCode(callSuper=false");
         if (!starred.isEmpty()) {
             String ofList = starred.stream()
                     .map(v -> "\"" + camelCaseBoundary.matcher(v)
