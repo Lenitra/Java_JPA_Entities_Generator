@@ -19,10 +19,10 @@ c:nomClasse
 c:nomClasse
 e:nomEnum
 ```
-Ajout d'un "*" pour signifier l'unicité
-"+<int>" permet de metre une valeur maximale
-"-<int>" permet de metre une valeur minimale
-/!\ Bien mettre un espace !
+"*" pour signifier l'unicité <br>
+"+<int>" permet de metre une valeur maximale <br>
+"-<int>" permet de metre une valeur minimale <br><br>
+**/!\ Bien mettre un espace !**
 
 ## 2. Renseigner les données dans `projectSettings.txt`
 **/!\ Ne pas mettre d'espaces**
