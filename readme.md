@@ -36,3 +36,7 @@ inteliJ_project_path=D:\Utilisateurs\thomas.lemartinel\Desktop\JavaAvance\toast
 - inteliJ_project_path : **racine** du projet généré par inteliJ
 
 *Obligatoire
+
+
+## Features à venir 
+- Faire un système de constances pour les messages d'erreur bean validation
