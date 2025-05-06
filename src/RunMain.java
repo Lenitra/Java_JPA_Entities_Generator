@@ -237,7 +237,6 @@ public class RunMain {
                     fieldLines.add(sizeAnn.toString());
                 }
                 String fk = tableName + "_id";
-                fieldLines.add("    @Getter");
                 fieldLines
                         .add("    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)");
                 fieldLines.add("    @JoinColumn(name = \"" + fk + "\", foreignKey = @ForeignKey(name = \"fk_"
@@ -264,7 +263,6 @@ public class RunMain {
                     sizeAnn.append(")");
                     fieldLines.add(sizeAnn.toString());
                 }
-                fieldLines.add("    @Getter");
                 fieldLines.add("    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)");
                 fieldLines.add("    @JoinTable(name = \"" + jt + "\",");
                 fieldLines.add("        joinColumns = @JoinColumn(name = \"" + tableName
@@ -293,7 +291,6 @@ public class RunMain {
                     sizeAnn.append(")");
                     fieldLines.add(sizeAnn.toString());
                 }
-                fieldLines.add("    @Getter");
                 fieldLines.add("    @ElementCollection(fetch = FetchType.LAZY)");
                 fieldLines.add("    @CollectionTable(name = \"" + tbl + "\", joinColumns = @JoinColumn(name = \"" + fk
                         + "\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var + "\")))");
