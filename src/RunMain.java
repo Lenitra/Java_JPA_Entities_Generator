@@ -226,6 +226,7 @@ public class RunMain {
             if ((type.startsWith("List") || type.startsWith("Set")) && m.find()) {
                 String elt = m.group(1).trim();
                 String fk = tableName + "_id";
+                fieldLines.add("    @Getter");
                 fieldLines
                         .add("    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)");
                 fieldLines.add("    @JoinColumn(name = \"" + fk + "\", foreignKey = @ForeignKey(name = \"fk_"
@@ -241,6 +242,7 @@ public class RunMain {
             else if (type.startsWith("Set") && m.find()) {
                 String elt = m.group(1).trim();
                 String jt = tableName + "_" + var;
+                fieldLines.add("    @Getter");
                 fieldLines.add("    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)");
                 fieldLines.add("    @JoinTable(name = \"" + jt + "\",");
                 fieldLines.add("        joinColumns = @JoinColumn(name = \"" + tableName
@@ -258,6 +260,7 @@ public class RunMain {
                 String vt = kv[1].trim();
                 String tbl = tableName + "_" + var;
                 String fk = tableName + "_id";
+                fieldLines.add("    @Getter");
                 fieldLines.add("    @ElementCollection(fetch = FetchType.LAZY)");
                 fieldLines.add("    @CollectionTable(name = \"" + tbl + "\", joinColumns = @JoinColumn(name = \"" + fk
                         + "\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var + "\")))");
