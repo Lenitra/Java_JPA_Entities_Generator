@@ -206,17 +206,18 @@ public class RunMain {
         while (j < lines.size() && lines.get(j).trim().startsWith("-")) {
             String raw = lines.get(j).trim().substring(1).trim();
             boolean required = raw.endsWith("*");
-            if (required) {
-                raw = raw.substring(0, raw.length() - 1).trim();
-            }
-
+            if (required) raw = raw.substring(0, raw.length() - 1).trim();
+    
             String[] parts = raw.split("\\s+");
-            if (parts.length < 2) {
-                j++;
-                continue;
-            }
+            if (parts.length < 2) { j++; continue; }
             String type = parts[0];
             String var = parts[1];
+            // parse min/max tokens
+            String minVal = null, maxVal = null;
+            for (int k = 2; k < parts.length; k++) {
+                if (parts[k].startsWith("-") && parts[k].length() > 1) minVal = parts[k].substring(1);
+                if (parts[k].startsWith("+") && parts[k].length() > 1) maxVal = parts[k].substring(1);
+            }
             String col = camelCaseBoundary.matcher(var).replaceAll("$1_$2").toLowerCase();
             String nullable = required ? ", nullable=false" : "";
             Matcher m = genericPattern.matcher(type);
@@ -228,7 +229,7 @@ public class RunMain {
                 fieldLines
                         .add("    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)");
                 fieldLines.add("    @JoinColumn(name = \"" + fk + "\", foreignKey = @ForeignKey(name = \"fk_"
-                        + tableName + "_" + var + "\"))");
+                        + tableName + "_" + camelCaseBoundary.matcher(var).replaceAll("$1_$2").toLowerCase() + "\"))");
                 if (type.startsWith("List")) {
                     fieldLines.add("    @OrderColumn(name = \"" + var + "_order\")");
                 }
@@ -278,21 +279,46 @@ public class RunMain {
                         + (coll.equals("List") ? "ArrayList<>()" : "HashSet<>()") + ";");
                 fieldLines.add("");
             }
-            // 6. Champ simple non-relationnel
+            // Champ simple non-relationnel
             else {
-                fieldLines.add("    @Getter @Setter");
+                // 2. Bean Validation pour types simples
                 if ("String".equals(type)) {
-                    fieldLines.add("    @NotBlank(message = \"Ne peut pas être vide\")");
+                    if (minVal != null || maxVal != null) {
+                        StringBuilder sizeAnn = new StringBuilder("    @Size(");
+                        if (minVal != null)
+                            sizeAnn.append("min = ").append(minVal);
+                        if (minVal != null && maxVal != null)
+                            sizeAnn.append(", ");
+                        if (maxVal != null)
+                            sizeAnn.append("max = ").append(maxVal);
+                        sizeAnn.append(")");
+                        fieldLines.add(sizeAnn.toString());
+                    }
+                    fieldLines.add("    @NotBlank(message = \"Ne peut pas etre vide\")");
+                } else if (type.matches("(?:byte|short|int|long|float|double|Byte|Short|Integer|Long|Float|Double)")) {
+                    if (minVal != null)
+                        fieldLines.add("    @Min(" + minVal + ")");
+                    if (maxVal != null)
+                        fieldLines.add("    @Max(" + maxVal + ")");
                 }
-                if (required) {
+                if (required)
                     fieldLines.add("    @NotNull");
+
+                // 3. Column avec longueur si applicable
+                StringBuilder colAnn = new StringBuilder("    @Column(name = \"" + col + "\"");
+                if ("String".equals(type) && maxVal != null) {
+                    colAnn.append(", length = ").append(maxVal);
                 }
-                fieldLines.add("    @Column(name = \"" + col + "\"" + nullable + ")");
+                colAnn.append(nullable).append(")");
+                fieldLines.add(colAnn.toString());
+
+                // 4. Lombok getters/setters et champ
+                fieldLines.add("    @Getter @Setter");
                 fieldLines.add("    private " + type + " " + var + ";");
                 fieldLines.add("");
-            }
-            if (required) {
-                starred.add(var);
+
+                if (required)
+                    starred.add(var);
             }
             j++;
         }
@@ -307,6 +333,9 @@ public class RunMain {
                 .append("import java.util.*;").append(nl)
                 .append("import app.model.entities.enums.*;").append(nl)
                 .append("import java.time.LocalDate;").append(nl)
+                .append("import jakarta.validation.constraints.Max;").append(nl)
+                .append("import jakarta.validation.constraints.Min;").append(nl)
+                .append("import jakarta.validation.constraints.Size;").append(nl)
                 .append("import org.springframework.format.annotation.DateTimeFormat;").append(nl).append(nl)
                 .append("@Entity").append(nl)
                 .append("@Table(name=\"").append(tableName).append("\"");

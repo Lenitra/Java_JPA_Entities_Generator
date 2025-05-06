@@ -9,7 +9,7 @@
 
 ```
 c:Personnage
-- String nom*
+- String nom * -5 +10
 - int age
 - List<String> exemples 
 e:nomEnum
