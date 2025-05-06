@@ -520,9 +520,15 @@ public class RunMain {
         else
             showWarn("Clé 'database_name' non trouvée");
 
-        String ideKey = "intellij_project_path";
-        if (configs.containsKey(ideKey) && !configs.get(ideKey).isEmpty())
-            copyDirectory(tmpDir, Paths.get(configs.get(ideKey)));
+        String ideKey = "intelij_project_path";
+        if (configs.containsKey(ideKey) && !configs.get(ideKey).isEmpty()) {
+            Path idePath = Paths.get(configs.get(ideKey));
+            if (!idePath.isAbsolute()) {
+            showError("intellij_project_path doit être un chemin absolu");
+            return;
+            }
+            copyDirectory(tmpDir, idePath);
+        }
         else if (configs.containsKey(ideKey))
             showWarn("intellij_project_path vide, le template genere se trouve dans /tmp");
         else
