@@ -251,7 +251,7 @@ public class RunMain {
                     fieldLines.add("    //            joinColumns = @JoinColumn(name = \"" + joinCol + "\"),");
                     fieldLines.add("    //            inverseJoinColumns = @JoinColumn(name = \"" + col + "_" + elemCol
                             + "\"))");
-                    fieldLines.add("    @Getter")
+                    fieldLines.add("    @Getter");
 
                     // Si tu veux un bloc Map<K,V>, rajoute ici un 3e bloc similaire…
                 }
@@ -285,6 +285,7 @@ public class RunMain {
                 .append("import org.springframework.data.jpa.domain.AbstractPersistable;").append(nl)
                 .append("import jakarta.validation.constraints.NotBlank;").append(nl)
                 .append("import java.time.LocalDate;").append(nl)
+                .append("import jakarta.validation.constraints.NotNull;").append(nl)
                 .append("import java.util.*;").append(nl)
                 .append("import app.model.entities.enums.*;").append(nl)
                 .append("import org.springframework.format.annotation.DateTimeFormat;").append(nl).append(nl)
@@ -307,22 +308,20 @@ public class RunMain {
                     .append("})");
         }
         sb.append(")").append(nl)
-                .append("@NoArgsConstructor(access=AccessLevel.PROTECTED)").append(nl)
-                .append("@ToString(callSuper=true");
+            .append("@NoArgsConstructor(access=AccessLevel.PROTECTED)").append(nl)
+            .append("@ToString(callSuper=true");
         if (!starred.isEmpty()) {
             String ofList = starred.stream()
-                    .map(v -> "\"" + camelCaseBoundary.matcher(v)
-                            .replaceAll("$1_$2").toLowerCase() + "\"")
-                    .collect(Collectors.joining(", "));
+                .map(v -> "\"" + v + "\"")
+                .collect(Collectors.joining(", "));
             sb.append(", of={").append(ofList).append("}");
         }
         sb.append(")").append(nl)
-                .append("@EqualsAndHashCode(callSuper=false");
+            .append("@EqualsAndHashCode(callSuper=false");
         if (!starred.isEmpty()) {
             String ofList = starred.stream()
-                    .map(v -> "\"" + camelCaseBoundary.matcher(v)
-                            .replaceAll("$1_$2").toLowerCase() + "\"")
-                    .collect(Collectors.joining(", "));
+                .map(v -> "\"" + v + "\"")
+                .collect(Collectors.joining(", "));
             sb.append(", of={").append(ofList).append("}");
         }
         sb.append(")").append(nl).append(nl)
