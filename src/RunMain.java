@@ -124,7 +124,9 @@ public class RunMain {
         StringBuilder sb = new StringBuilder();
 
         // en-tête de la factory
-        sb.append("package app.model.factories;").append(nl).append(nl)
+        sb.append("package app.model.entities;").append(nl).append(nl)
+                .append("import app.model.entities.enums.*;").append(nl)
+                .append("import java.time.LocalDate;").append(nl)
                 .append("import lombok.AccessLevel;").append(nl)
                 .append("import lombok.NoArgsConstructor;").append(nl).append(nl)
                 .append("@NoArgsConstructor(access = AccessLevel.PRIVATE)").append(nl).append(nl)
@@ -249,6 +251,7 @@ public class RunMain {
                     fieldLines.add("    //            joinColumns = @JoinColumn(name = \"" + joinCol + "\"),");
                     fieldLines.add("    //            inverseJoinColumns = @JoinColumn(name = \"" + col + "_" + elemCol
                             + "\"))");
+                    fieldLines.add("    @Getter")
 
                     // Si tu veux un bloc Map<K,V>, rajoute ici un 3e bloc similaire…
                 }
@@ -256,7 +259,7 @@ public class RunMain {
                 else {
                     fieldLines.add("    @Getter @Setter");
                     if (type.startsWith("String")){
-                        fieldLines.add("@NotBlank(message = \"Ne peut pas être vide\")");
+                        fieldLines.add("    @NotBlank(message = \"Ne peut pas etre vide\")");
                     }
                     fieldLines.add("    //TODO: (Code) Ajouter les règles de gestion");
                     if (isStar)
@@ -280,6 +283,10 @@ public class RunMain {
                 .append("import jakarta.persistence.*;").append(nl)
                 .append("import lombok.*;").append(nl)
                 .append("import org.springframework.data.jpa.domain.AbstractPersistable;").append(nl)
+                .append("import jakarta.validation.constraints.NotBlank;").append(nl)
+                .append("import java.time.LocalDate;").append(nl)
+                .append("import java.util.*;").append(nl)
+                .append("import app.model.entities.enums.*;").append(nl)
                 .append("import org.springframework.format.annotation.DateTimeFormat;").append(nl).append(nl)
                 .append("@Entity").append(nl)
                 .append("@Table(name=\"").append(tableName).append("\"");
@@ -363,7 +370,7 @@ public class RunMain {
         String src = "package app.model.services;" + System.lineSeparator()
                 + "import app.model.dao." + name + "Dao;" + System.lineSeparator()
                 + "import app.model.entities." + name + ";" + System.lineSeparator()
-                + "import app.model.services.interfaces.I" + name + "Service;"
+                + "import app.model.services.interfaces.I" + name + "Service;" + System.lineSeparator() 
                 + "import org.springframework.stereotype.Service;" + System.lineSeparator() + System.lineSeparator()
                 + "@Service" + System.lineSeparator()
                 + "public class " + name + "Service extends AbstractService<" + name + "," + name

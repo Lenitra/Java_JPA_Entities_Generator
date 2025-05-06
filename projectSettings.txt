@@ -1,2 +1,2 @@
-database_name=
+database_name=java_ava_test_int_hockey
 inteliJ_project_path=
