@@ -200,23 +200,29 @@ public class RunMain {
         List<String> fieldLines = new ArrayList<>();
         Pattern camelCaseBoundary = Pattern.compile("([a-z])([A-Z])");
         Pattern genericPattern = Pattern.compile("<(.+?)>");
-
+        String customGetterSetter = "";
         // 1. Collecte des attributs
         int j = idxStart + 1;
         while (j < lines.size() && lines.get(j).trim().startsWith("-")) {
             String raw = lines.get(j).trim().substring(1).trim();
             boolean required = raw.endsWith("*");
-            if (required) raw = raw.substring(0, raw.length() - 1).trim();
-    
+            if (required)
+                raw = raw.substring(0, raw.length() - 1).trim();
+
             String[] parts = raw.split("\\s+");
-            if (parts.length < 2) { j++; continue; }
+            if (parts.length < 2) {
+                j++;
+                continue;
+            }
             String type = parts[0];
             String var = parts[1];
             // parse min/max tokens
             String minVal = null, maxVal = null;
             for (int k = 2; k < parts.length; k++) {
-                if (parts[k].startsWith("-") && parts[k].length() > 1) minVal = parts[k].substring(1);
-                if (parts[k].startsWith("+") && parts[k].length() > 1) maxVal = parts[k].substring(1);
+                if (parts[k].startsWith("-") && parts[k].length() > 1)
+                    minVal = parts[k].substring(1);
+                if (parts[k].startsWith("+") && parts[k].length() > 1)
+                    maxVal = parts[k].substring(1);
             }
             String col = camelCaseBoundary.matcher(var).replaceAll("$1_$2").toLowerCase();
             String nullable = required ? ", nullable=false" : "";
@@ -247,6 +253,19 @@ public class RunMain {
                 fieldLines.add("    private " + type + " " + var + " = new "
                         + (type.startsWith("List") ? "ArrayList<>()" : "HashSet<>()") + ";");
                 fieldLines.add("");
+                customGetterSetter += "    public void addTo" + Character.toUpperCase(var.charAt(0)) + var.substring(1)
+                        + "(" + elt + " element) {" + nl
+                        + "        if (element == null) {" + nl
+                        + "            throw new IllegalArgumentException(\"On ajoute pas un élément null\");" + nl
+                        + "        }" + nl
+                        + "        this." + var + ".add(element);" + nl
+                        + "    }" + nl + nl;
+
+                customGetterSetter += "    public " + type + " get" + Character.toUpperCase(var.charAt(0))
+                        + var.substring(1) + "() {" + nl
+                        + "        return Collections.unmodifiable" + (type.startsWith("List") ? "List" : "Set")
+                        + "(this." + var + ");" + nl
+                        + "    }" + nl + nl;
             }
             // 3. ManyToMany bidirectionnel (Set<Entité>)
             else if (type.startsWith("Set") && m.find()) {
@@ -272,6 +291,16 @@ public class RunMain {
                 fieldLines.add("    )");
                 fieldLines.add("    private Set<" + elt + "> " + var + " = new HashSet<>();");
                 fieldLines.add("");
+                customGetterSetter += "    public void addTo" + Character.toUpperCase(var.charAt(0)) + var.substring(1)
+                    + "(" + elt + " element) {" + nl
+                    + "        if (element == null) {" + nl
+                    + "            throw new IllegalArgumentException(\"On ajoute pas un élément null\");" + nl
+                    + "        }" + nl
+                    + "        this." + var + ".add(element);" + nl
+                    + "    }" + nl + nl;
+                    customGetterSetter += "    public " + type + " get" + Character.toUpperCase(var.charAt(0)) + var.substring(1) + "() {" + nl
+                        + "        return Collections.unmodifiable" + (type.startsWith("List") ? "List" : "Set") + "(this." + var + ");" + nl
+                        + "    }" + nl + nl;
             }
             // 4. ElementCollection pour Map<K,V>
             else if (type.startsWith("Map") && m.find()) {
@@ -298,6 +327,16 @@ public class RunMain {
                 fieldLines.add("    @Column(name = \"" + var + "_value\")");
                 fieldLines.add("    private Map<" + kt + ", " + vt + "> " + var + " = new HashMap<>();");
                 fieldLines.add("");
+                customGetterSetter += "    public void addTo" + Character.toUpperCase(var.charAt(0)) + var.substring(1)
+                    + "(" + kt + " key, " + vt + " value) {" + nl
+                    + "        if (key == null || value == null) {" + nl
+                    + "            throw new IllegalArgumentException(\"Key ou Value ne peuvent pas être null\");" + nl
+                    + "        }" + nl
+                    + "        this." + var + ".put(key, value);" + nl
+                    + "    }" + nl + nl;
+                    customGetterSetter += "    public Map<" + kt + ", " + vt + "> get" + Character.toUpperCase(var.charAt(0)) + var.substring(1) + "() {" + nl
+                        + "        return Collections.unmodifiableMap(this." + var + ");" + nl
+                        + "    }" + nl + nl;
             }
             // 5. ElementCollection pour List<Type> ou Set<Type> de basiques
             else if ((type.startsWith("List") || type.startsWith("Set") || type.startsWith("Collection"))) {
@@ -311,6 +350,17 @@ public class RunMain {
                 fieldLines.add("    private " + coll + "<" + elt + "> " + var + " = new "
                         + (coll.equals("List") ? "ArrayList<>()" : "HashSet<>()") + ";");
                 fieldLines.add("");
+                customGetterSetter += "    public void addTo" + Character.toUpperCase(var.charAt(0)) + var.substring(1)
+                    + "(" + elt + " element) {" + nl
+                    + "        if (element == null) {" + nl
+                    + "            throw new IllegalArgumentException(\"On ajoute pas un élément null\");" + nl
+                    + "        }" + nl
+                    + "        this." + var + ".add(element);" + nl
+                    + "    }" + nl + nl;
+
+                customGetterSetter += "    public " + coll + "<" + elt + "> get" + Character.toUpperCase(var.charAt(0)) + var.substring(1) + "() {" + nl
+                    + "        return Collections.unmodifiable" + (coll.equals("List") ? "List" : "Set") + "(this." + var + ");" + nl
+                    + "    }" + nl + nl;
             }
             // Champ simple non-relationnel
             else {
@@ -524,12 +574,11 @@ public class RunMain {
         if (configs.containsKey(ideKey) && !configs.get(ideKey).isEmpty()) {
             Path idePath = Paths.get(configs.get(ideKey));
             if (!idePath.isAbsolute()) {
-            showError("intellij_project_path doit être un chemin absolu");
-            return;
+                showError("intellij_project_path doit être un chemin absolu");
+                return;
             }
             copyDirectory(tmpDir, idePath);
-        }
-        else if (configs.containsKey(ideKey))
+        } else if (configs.containsKey(ideKey))
             showWarn("intellij_project_path vide, le template genere se trouve dans /tmp");
         else
             showWarn("Clé 'intellij_project_path' non trouvée");
