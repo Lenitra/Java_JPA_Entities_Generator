@@ -225,6 +225,17 @@ public class RunMain {
             // 2. OneToMany unidirectionnel (List<Entité> ou Set<Entité>)
             if ((type.startsWith("List") || type.startsWith("Set")) && m.find()) {
                 String elt = m.group(1).trim();
+                if (minVal != null || maxVal != null) {
+                    StringBuilder sizeAnn = new StringBuilder("    @Size(");
+                    if (minVal != null)
+                        sizeAnn.append("min = ").append(minVal);
+                    if (minVal != null && maxVal != null)
+                        sizeAnn.append(", ");
+                    if (maxVal != null)
+                        sizeAnn.append("max = ").append(maxVal);
+                    sizeAnn.append(")");
+                    fieldLines.add(sizeAnn.toString());
+                }
                 String fk = tableName + "_id";
                 fieldLines.add("    @Getter");
                 fieldLines
@@ -242,6 +253,17 @@ public class RunMain {
             else if (type.startsWith("Set") && m.find()) {
                 String elt = m.group(1).trim();
                 String jt = tableName + "_" + var;
+                if (minVal != null || maxVal != null) {
+                    StringBuilder sizeAnn = new StringBuilder("    @Size(");
+                    if (minVal != null)
+                        sizeAnn.append("min = ").append(minVal);
+                    if (minVal != null && maxVal != null)
+                        sizeAnn.append(", ");
+                    if (maxVal != null)
+                        sizeAnn.append("max = ").append(maxVal);
+                    sizeAnn.append(")");
+                    fieldLines.add(sizeAnn.toString());
+                }
                 fieldLines.add("    @Getter");
                 fieldLines.add("    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)");
                 fieldLines.add("    @JoinTable(name = \"" + jt + "\",");
@@ -260,6 +282,17 @@ public class RunMain {
                 String vt = kv[1].trim();
                 String tbl = tableName + "_" + var;
                 String fk = tableName + "_id";
+                if (minVal != null || maxVal != null) {
+                    StringBuilder sizeAnn = new StringBuilder("    @Size(");
+                    if (minVal != null)
+                        sizeAnn.append("min = ").append(minVal);
+                    if (minVal != null && maxVal != null)
+                        sizeAnn.append(", ");
+                    if (maxVal != null)
+                        sizeAnn.append("max = ").append(maxVal);
+                    sizeAnn.append(")");
+                    fieldLines.add(sizeAnn.toString());
+                }
                 fieldLines.add("    @Getter");
                 fieldLines.add("    @ElementCollection(fetch = FetchType.LAZY)");
                 fieldLines.add("    @CollectionTable(name = \"" + tbl + "\", joinColumns = @JoinColumn(name = \"" + fk
