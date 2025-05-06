@@ -176,7 +176,7 @@ public class RunMain {
             for (String s : setters) {
                 sb.append(s).append(nl);
             }
-            sb.append("        return obj;").append(nl)
+            sb.append("        return ValidUtil.isValid(obj);").append(nl)
                     .append("    }").append(nl).append(nl);
 
             // on saute les lignes d'attributs
