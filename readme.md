@@ -40,5 +40,3 @@ inteliJ_project_path=D:\Utilisateurs\thomas.lemartinel\Desktop\JavaAvance\toast
 
 ## Features à venir 
 - Faire un système de constances pour les messages d'erreur bean validation
-- Ajouer une méthode "listAdd" pour tout les set, list, map...
-- Ajouter un getter de collection avec un retour unModifiable

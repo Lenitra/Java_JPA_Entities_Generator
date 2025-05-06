@@ -450,7 +450,7 @@ public class RunMain {
                 .append(nl);
 
         // Insertion des champs
-        for (String fld : fieldLines) {
+        for (String fld : customGetterSetter.split("\n")) {
             sb.append(fld).append(nl);
         }
         sb.append("}").append(nl);
