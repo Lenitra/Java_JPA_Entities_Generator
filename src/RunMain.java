@@ -391,7 +391,7 @@ public class RunMain {
                         fieldLines.add("    @Max(value = " + maxVal + ", message=\"La valeur maximale est :" + maxVal + " \")");
                 }
                 if (required)
-                    fieldLines.add("    @NotNull");
+                    fieldLines.add("    @NotNull(message = \"Ce champ ne peut pas être null\")");
 
                 // 3. Column avec longueur si applicable
                 StringBuilder colAnn = new StringBuilder("    @Column(name = \"" + col + "\"");
