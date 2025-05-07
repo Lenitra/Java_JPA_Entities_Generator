@@ -257,7 +257,7 @@ public class RunMain {
                 customGetterSetter += "    public void addTo" + Character.toUpperCase(var.charAt(0)) + var.substring(1)
                         + "(" + elt + " element) {" + nl
                         + "        if (element == null) {" + nl
-                        + "            throw new IllegalArgumentException(\"On ajoute pas un élément null\");" + nl
+                        + "            throw new IllegalArgumentException(\"On ajoute pas un element null\");" + nl
                         + "        }" + nl
                         + "        this." + var + ".add(element);" + nl
                         + "    }" + nl + nl;
@@ -296,7 +296,7 @@ public class RunMain {
                 customGetterSetter += "    public void addTo" + Character.toUpperCase(var.charAt(0)) + var.substring(1)
                         + "(" + elt + " element) {" + nl
                         + "        if (element == null) {" + nl
-                        + "            throw new IllegalArgumentException(\"On ajoute pas un élément null\");" + nl
+                        + "            throw new IllegalArgumentException(\"On ajoute pas un element null\");" + nl
                         + "        }" + nl
                         + "        this." + var + ".add(element);" + nl
                         + "    }" + nl + nl;
@@ -360,7 +360,7 @@ public class RunMain {
                 customGetterSetter += "    public void addTo" + Character.toUpperCase(var.charAt(0)) + var.substring(1)
                         + "(" + elt + " element) {" + nl
                         + "        if (element == null) {" + nl
-                        + "            throw new IllegalArgumentException(\"On ajoute pas un élément null\");" + nl
+                        + "            throw new IllegalArgumentException(\"On ajoute pas un element null\");" + nl
                         + "        }" + nl
                         + "        this." + var + ".add(element);" + nl
                         + "    }" + nl + nl;
