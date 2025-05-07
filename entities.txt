@@ -1,7 +1,7 @@
-c:Championat
+c:Championnat
 - Set<Equipe> classement
-- int anneeChampionat * -0
-- String nomChampionat * -2 +50
+- int anneeChampionnat * -0
+- String nomChampionnat * -2 +50
 - Set<Match> lesMatchs 
 c:Equipe
 - String nom * -3 +100

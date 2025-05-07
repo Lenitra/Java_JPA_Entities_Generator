@@ -278,7 +278,7 @@ public class RunMain {
                             + var.substring(1)
                             + "(" + kt + " key, " + vt + " value) {" + nl
                             + "        if (key == null || value == null) {" + nl
-                            + "            throw new IllegalArgumentException(\"Key ou Value ne peuvent pas être null\");"
+                            + "            throw new IllegalArgumentException(\"Key ou Value ne peuvent pas etre null\");"
                             + nl
                             + "        }" + nl
                             + "        this." + var + ".put(key, value);" + nl
@@ -328,7 +328,7 @@ public class RunMain {
                             + var.substring(1)
                             + "(" + kt + " key, " + vt + " value) {" + nl
                             + "        if (key == null || value == null) {" + nl
-                            + "            throw new IllegalArgumentException(\"Key ou Value ne peuvent pas être null\");"
+                            + "            throw new IllegalArgumentException(\"Key ou Value ne peuvent pas etre null\");"
                             + nl
                             + "        }" + nl
                             + "        this." + var + ".put(key, value);" + nl
@@ -353,7 +353,7 @@ public class RunMain {
                             + var.substring(1)
                             + "(" + kt + " key, " + vt + " value) {" + nl
                             + "        if (key == null || value == null) {" + nl
-                            + "            throw new IllegalArgumentException(\"Key ou Value ne peuvent pas être null\");"
+                            + "            throw new IllegalArgumentException(\"Key ou Value ne peuvent pas etre null\");"
                             + nl
                             + "        }" + nl
                             + "        this." + var + ".put(key, value);" + nl
@@ -446,56 +446,6 @@ public class RunMain {
                         + "(this." + var + ");" + nl
                         + "    }" + nl + nl;
             }
-
-            // // 4. ElementCollection pour Map<K,V>
-            // else if (type.startsWith("Map") && m.find()) {
-            // String[] kv = m.group(1).split(",");
-            // String kt = kv[0].trim();
-            // String vt = kv[1].trim();
-            // boolean valueIsBasic = BASIC_TYPES.contains(vt);
-            // String tbl = tableName + "_" + var;
-            // String fk = tableName + "_id";
-            // if (minVal != null || maxVal != null) {
-            // StringBuilder sizeAnn = new StringBuilder(" @Size(");
-            // if (minVal != null)
-            // sizeAnn.append("min = ").append(minVal);
-            // if (minVal != null && maxVal != null)
-            // sizeAnn.append(", ");
-            // if (maxVal != null)
-            // sizeAnn.append("max = ").append(maxVal);
-            // sizeAnn.append(", message = \"La taille doit etre comprise entre
-            // ").append(minVal).append(" et ")
-            // .append(maxVal).append("\")");
-            // fieldLines.add(sizeAnn.toString());
-            // }
-            // fieldLines.add(" @ElementCollection(fetch = FetchType.LAZY)");
-            // fieldLines.add(" @CollectionTable(name = \"" + tbl + "\", joinColumns =
-            // @JoinColumn(name = \"" + fk
-            // + "\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var +
-            // "\")))");
-            // fieldLines.add(" @MapKeyJoinColumn(name = \"" + var
-            // + "_key\", nullable = false, foreignKey = @ForeignKey(name = \"fk_" +
-            // tableName + "_" + var
-            // + "_key\"))");
-            // fieldLines.add(" @Column(name = \"" + var + "_value\", nullable = false)");
-            // fieldLines.add(" private Map<" + kt + ", " + vt + "> " + var + " = new
-            // HashMap<>();");
-            // fieldLines.add("");
-            // customGetterSetter += " public void addTo" +
-            // Character.toUpperCase(var.charAt(0)) + var.substring(1)
-            // + "(" + kt + " key, " + vt + " value) {" + nl
-            // + " if (key == null || value == null) {" + nl
-            // + " throw new IllegalArgumentException(\"Key ou Value ne peuvent pas etre
-            // null\");"
-            // + nl
-            // + " }" + nl
-            // + " this." + var + ".put(key, value);" + nl
-            // + " }" + nl + nl;
-            // customGetterSetter += " public Map<" + kt + ", " + vt + "> get"
-            // + Character.toUpperCase(var.charAt(0)) + var.substring(1) + "() {" + nl
-            // + " return Collections.unmodifiableMap(this." + var + ");" + nl
-            // + " }" + nl + nl;
-            // }
 
             // 5. ElementCollection pour List<Type> ou Set<Type> de basiques
             else if ((type.startsWith("List") || type.startsWith("Set") || type.startsWith("Collection"))) {
