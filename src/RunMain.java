@@ -386,9 +386,9 @@ public class RunMain {
                     fieldLines.add("    @NotBlank(message = \"Ne peut pas etre vide\")");
                 } else if (type.matches("(?:byte|short|int|long|float|double|Byte|Short|Integer|Long|Float|Double)")) {
                     if (minVal != null)
-                        fieldLines.add("    @Min(" + minVal + ")");
+                        fieldLines.add("    @Min(" + minVal + ", message=\"La valeur minimale est :" +minVal+ " \")");
                     if (maxVal != null)
-                        fieldLines.add("    @Max(" + maxVal + ")");
+                        fieldLines.add("    @Max(value = " + maxVal + ", message=\"La valeur maximale est :" + maxVal + " \")");
                 }
                 if (required)
                     fieldLines.add("    @NotNull");
