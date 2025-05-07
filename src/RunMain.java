@@ -292,14 +292,16 @@ public class RunMain {
                 fieldLines.add("    private Set<" + elt + "> " + var + " = new HashSet<>();");
                 fieldLines.add("");
                 customGetterSetter += "    public void addTo" + Character.toUpperCase(var.charAt(0)) + var.substring(1)
-                    + "(" + elt + " element) {" + nl
-                    + "        if (element == null) {" + nl
-                    + "            throw new IllegalArgumentException(\"On ajoute pas un élément null\");" + nl
-                    + "        }" + nl
-                    + "        this." + var + ".add(element);" + nl
-                    + "    }" + nl + nl;
-                    customGetterSetter += "    public " + type + " get" + Character.toUpperCase(var.charAt(0)) + var.substring(1) + "() {" + nl
-                        + "        return Collections.unmodifiable" + (type.startsWith("List") ? "List" : "Set") + "(this." + var + ");" + nl
+                        + "(" + elt + " element) {" + nl
+                        + "        if (element == null) {" + nl
+                        + "            throw new IllegalArgumentException(\"On ajoute pas un élément null\");" + nl
+                        + "        }" + nl
+                        + "        this." + var + ".add(element);" + nl
+                        + "    }" + nl + nl;
+                customGetterSetter += "    public " + type + " get" + Character.toUpperCase(var.charAt(0))
+                        + var.substring(1) + "() {" + nl
+                        + "        return Collections.unmodifiable" + (type.startsWith("List") ? "List" : "Set")
+                        + "(this." + var + ");" + nl
                         + "    }" + nl + nl;
             }
             // 4. ElementCollection pour Map<K,V>
@@ -328,13 +330,15 @@ public class RunMain {
                 fieldLines.add("    private Map<" + kt + ", " + vt + "> " + var + " = new HashMap<>();");
                 fieldLines.add("");
                 customGetterSetter += "    public void addTo" + Character.toUpperCase(var.charAt(0)) + var.substring(1)
-                    + "(" + kt + " key, " + vt + " value) {" + nl
-                    + "        if (key == null || value == null) {" + nl
-                    + "            throw new IllegalArgumentException(\"Key ou Value ne peuvent pas être null\");" + nl
-                    + "        }" + nl
-                    + "        this." + var + ".put(key, value);" + nl
-                    + "    }" + nl + nl;
-                    customGetterSetter += "    public Map<" + kt + ", " + vt + "> get" + Character.toUpperCase(var.charAt(0)) + var.substring(1) + "() {" + nl
+                        + "(" + kt + " key, " + vt + " value) {" + nl
+                        + "        if (key == null || value == null) {" + nl
+                        + "            throw new IllegalArgumentException(\"Key ou Value ne peuvent pas être null\");"
+                        + nl
+                        + "        }" + nl
+                        + "        this." + var + ".put(key, value);" + nl
+                        + "    }" + nl + nl;
+                customGetterSetter += "    public Map<" + kt + ", " + vt + "> get"
+                        + Character.toUpperCase(var.charAt(0)) + var.substring(1) + "() {" + nl
                         + "        return Collections.unmodifiableMap(this." + var + ");" + nl
                         + "    }" + nl + nl;
             }
@@ -351,16 +355,18 @@ public class RunMain {
                         + (coll.equals("List") ? "ArrayList<>()" : "HashSet<>()") + ";");
                 fieldLines.add("");
                 customGetterSetter += "    public void addTo" + Character.toUpperCase(var.charAt(0)) + var.substring(1)
-                    + "(" + elt + " element) {" + nl
-                    + "        if (element == null) {" + nl
-                    + "            throw new IllegalArgumentException(\"On ajoute pas un élément null\");" + nl
-                    + "        }" + nl
-                    + "        this." + var + ".add(element);" + nl
-                    + "    }" + nl + nl;
+                        + "(" + elt + " element) {" + nl
+                        + "        if (element == null) {" + nl
+                        + "            throw new IllegalArgumentException(\"On ajoute pas un élément null\");" + nl
+                        + "        }" + nl
+                        + "        this." + var + ".add(element);" + nl
+                        + "    }" + nl + nl;
 
-                customGetterSetter += "    public " + coll + "<" + elt + "> get" + Character.toUpperCase(var.charAt(0)) + var.substring(1) + "() {" + nl
-                    + "        return Collections.unmodifiable" + (coll.equals("List") ? "List" : "Set") + "(this." + var + ");" + nl
-                    + "    }" + nl + nl;
+                customGetterSetter += "    public " + coll + "<" + elt + "> get" + Character.toUpperCase(var.charAt(0))
+                        + var.substring(1) + "() {" + nl
+                        + "        return Collections.unmodifiable" + (coll.equals("List") ? "List" : "Set") + "(this."
+                        + var + ");" + nl
+                        + "    }" + nl + nl;
             }
             // Champ simple non-relationnel
             else {
@@ -449,9 +455,14 @@ public class RunMain {
                 .append("public class ").append(name).append(" extends AbstractPersistable<Long> {").append(nl)
                 .append(nl);
 
+        // Insertion des arguments
+        for (String fld : fieldLines) {
+            sb.append(fld).append(nl);
+        }
+
         // Insertion des champs
         for (String fld : customGetterSetter.split("\n")) {
-            sb.append(fld).append(nl);
+            sb.append(fld);
         }
         sb.append("}").append(nl);
 
