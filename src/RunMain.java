@@ -206,10 +206,12 @@ public class RunMain {
         int j = idxStart + 1;
         while (j < lines.size() && lines.get(j).trim().startsWith("-")) {
             String raw = lines.get(j).trim().substring(1).trim();
-            boolean required = raw.endsWith("*");
-            if (required)
-                raw = raw.substring(0, raw.length() - 1).trim();
-
+            // 1.a) Détection du '*' n'importe où dans la ligne
+            boolean required = raw.contains("*");
+            // 1.b) On enlève tous les '*' pour ne pas gêner le split et la détection -/+
+            if (required) {
+                raw = raw.replace("*", "").trim();
+            }
             String[] parts = raw.split("\\s+");
             if (parts.length < 2) {
                 j++;
@@ -393,7 +395,8 @@ public class RunMain {
                     fieldLines.add("    @NotBlank(message = \"Ne peut pas etre vide\")");
                 } else if (type.matches("(?:byte|short|int|long|float|double|Byte|Short|Integer|Long|Float|Double)")) {
                     if (minVal != null)
-                        fieldLines.add("    @Min(value = " + minVal + ", message=\"La valeur minimale est :" + minVal + " \")");
+                        fieldLines.add("    @Min(value = " + minVal + ", message=\"La valeur minimale est :" + minVal
+                                + " \")");
                     if (maxVal != null)
                         fieldLines.add("    @Max(value = " + maxVal + ", message=\"La valeur maximale est :" + maxVal
                                 + " \")");
@@ -403,7 +406,8 @@ public class RunMain {
 
                 // 3. Column avec longueur si applicable
                 StringBuilder colAnn = new StringBuilder("    @Column(name = \"" + col + "\"");
-                if (!type.matches("(?:byte|short|int|long|float|double|Byte|Short|Integer|Long|Float|Double)") && maxVal != null) {
+                if (!type.matches("(?:byte|short|int|long|float|double|Byte|Short|Integer|Long|Float|Double)")
+                        && maxVal != null) {
                     colAnn.append(", length = ").append(maxVal);
                 }
                 colAnn.append(nullable).append(")");
