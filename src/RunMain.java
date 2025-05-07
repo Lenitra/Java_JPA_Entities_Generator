@@ -371,8 +371,10 @@ public class RunMain {
                         + var + ");" + nl
                         + "    }" + nl + nl;
             }
+
             // Champ simple non-relationnel
             else {
+                fieldLines.add("    @Getter @Setter");
                 // 2. Bean Validation pour types simples
                 if ("String".equals(type)) {
                     if (minVal != null || maxVal != null) {
@@ -400,14 +402,13 @@ public class RunMain {
 
                 // 3. Column avec longueur si applicable
                 StringBuilder colAnn = new StringBuilder("    @Column(name = \"" + col + "\"");
-                if ("String".equals(type) && maxVal != null) {
+                if (!type.matches("(?:byte|short|int|long|float|double|Byte|Short|Integer|Long|Float|Double)") && maxVal != null) {
                     colAnn.append(", length = ").append(maxVal);
                 }
                 colAnn.append(nullable).append(")");
                 fieldLines.add(colAnn.toString());
 
                 // 4. Lombok getters/setters et champ
-                fieldLines.add("    @Getter @Setter");
                 fieldLines.add("    private " + type + " " + var + ";");
                 fieldLines.add("");
 

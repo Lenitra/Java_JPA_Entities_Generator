@@ -1,17 +1,18 @@
-c:Equipe
-- String nom *
-- Ville ville *
-- Set<Joueur> listeJoueurs -12 +50
-c:Joueur
-- String prenom * -3 +300
-- String nom * -5 +50
-- LocalDate dateNaissance *
-- int nbPoint -0 +100
 c:Championat
 - Set<Equipe> classement
-- int anneeChampionat *
-- String nomChampionat *
+- int anneeChampionat * -0
+- String nomChampionat * -2 +50
 - Set<Match> lesMatchs 
+c:Equipe
+- String nom * -3 +100
+- Ville ville * +50
+- Set<Joueur> listeJoueurs
+c:Joueur
+- String prenom * -3 +50
+- String nom * -3 +50
+- LocalDate dateNaissance *
+- int nbPoint --1
+- Poste poste +15
 c:Match
 - Ville ville *
 - LocalDate dateMatch *
