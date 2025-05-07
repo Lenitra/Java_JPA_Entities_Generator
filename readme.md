@@ -19,10 +19,13 @@ c:nomClasse
 c:nomClasse
 e:nomEnum
 ```
+### Arguments pour les attributs
 "*" pour signifier l'unicité <br>
 "+<int>" permet de metre une valeur maximale <br>
 "-<int>" permet de metre une valeur minimale <br><br>
-**/!\ Bien mettre un espace !**
+".otm" permet de mettre une liste en @OneToMany (valeur par défaut) <br><br>
+".mtm" permet de mettre une liste en @ManyToMany, par défaut elle sera en @OneToMany <br><br>
+**/!\ Bien mettre des espaces entre les arguments !**
 
 ## 2. Renseigner les données dans `projectSettings.txt`
 **/!\ Ne pas mettre d'espaces**

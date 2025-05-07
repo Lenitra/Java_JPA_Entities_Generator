@@ -6,7 +6,7 @@ c:Championnat
 c:Equipe
 - String nom * -3 +100
 - Ville ville * +50
-- Set<Joueur> listeJoueurs
+- Set<Joueur> listeJoueurs .mtm
 c:Joueur
 - String prenom * -3 +50
 - String nom * -3 +50

@@ -231,6 +231,13 @@ public class RunMain {
         while (j < lines.size() && lines.get(j).trim().startsWith("-")) {
             String raw = lines.get(j).trim().substring(1).trim();
             boolean required = raw.contains("*");
+            boolean manyToMany = false;
+            if (raw.contains(".mtm")) {
+                manyToMany = true;
+            }
+            if (raw.contains(".otm")) {
+                manyToMany = false;
+            }
             if (required)
                 raw = raw.replace("*", "").trim();
 
@@ -255,7 +262,6 @@ public class RunMain {
             String nullable = required ? ", nullable=false" : "";
             Matcher m = genericPattern.matcher(type);
 
-
             if (type.startsWith("Map") && m.find()) {
                 String[] kv = m.group(1).split(",");
                 String kt = kv[0].trim();
@@ -269,9 +275,14 @@ public class RunMain {
                 if (!keyBasic && !valBasic) {
                     fieldLines.add("    @OneToMany(fetch = FetchType.LAZY)");
                     fieldLines.add("    @JoinTable( name = \"" + tableName + "_" + var + "\",");
-                    fieldLines.add("            joinColumns = @JoinColumn(name = \"" + tableName + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var + "__" + tableName + "_id\")),");
-                    fieldLines.add("            inverseJoinColumns = @JoinColumn(name = \"" + var + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var + "__" + var + "_id\")))");
-                    fieldLines.add("    @MapKeyJoinColumn(name = \"" + var + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var + "_id\"))");
+                    fieldLines.add("            joinColumns = @JoinColumn(name = \"" + tableName
+                            + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var + "__" + tableName
+                            + "_id\")),");
+                    fieldLines.add("            inverseJoinColumns = @JoinColumn(name = \"" + var
+                            + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var + "__" + var
+                            + "_id\")))");
+                    fieldLines.add("    @MapKeyJoinColumn(name = \"" + var
+                            + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var + "_id\"))");
                     fieldLines.add("    private Map<" + kt + ", " + vt + "> " + var + " = new HashMap<>();");
                     fieldLines.add("");
                     customGetterSetter += "    public void putTo" + Character.toUpperCase(var.charAt(0))
@@ -288,7 +299,7 @@ public class RunMain {
                             + "        return Collections.unmodifiableMap(this." + var + ");" + nl
                             + "    }" + nl + nl;
                 }
-                
+
                 // 2) clé entité, valeur basique
                 else if (!keyBasic && valBasic) {
                     fieldLines.add("    @ElementCollection(fetch = FetchType.LAZY)");
@@ -297,7 +308,8 @@ public class RunMain {
                             + tableName + "__" + var + "_id\")))");
                     fieldLines
                             .add("    @MapKeyJoinColumn(name = \"" + var + "_id\"," +
-                                    " foreignKey = @ForeignKey(name = \"fk__" + tableName + "__" + var + "_id\"), nullable=false)");
+                                    " foreignKey = @ForeignKey(name = \"fk__" + tableName + "__" + var
+                                    + "_id\"), nullable=false)");
                     fieldLines.add("    @Column(name = \"" + var + "\", nullable=false)");
                     fieldLines.add("    private Map<" + kt + ", " + vt + "> " + var + " = new HashMap<>();");
 
@@ -338,7 +350,7 @@ public class RunMain {
                             + "        return Collections.unmodifiableMap(this." + var + ");" + nl
                             + "    }" + nl + nl;
                 }
-                
+
                 // 4) deux types basiques
                 else {
                     fieldLines.add("    @ElementCollection(fetch = FetchType.LAZY)");
@@ -368,7 +380,8 @@ public class RunMain {
                 continue;
             }
             // 2. OneToMany unidirectionnel (List<Entité> ou Set<Entité>)
-            if ((type.startsWith("List") || type.startsWith("Set")) && m.find()) {
+            if ((type.startsWith("List") || type.startsWith("Set")) && m.find()
+                    && !basicTypes.contains(m.group(1).trim())) {
                 String elt = m.group(1).trim();
                 if (minVal != null || maxVal != null) {
                     StringBuilder sizeAnn = new StringBuilder("    @Size(");
@@ -383,17 +396,27 @@ public class RunMain {
                     fieldLines.add(sizeAnn.toString());
                 }
                 String fk = tableName + "_id";
-                fieldLines
-                        .add("    @OneToMany(fetch = FetchType.LAZY)");
-                fieldLines.add("    @JoinColumn(name = \"" + fk + "\", foreignKey = @ForeignKey(name = \"fk_"
-                        + tableName + "_" + camelCaseBoundary.matcher(var).replaceAll("$1_$2").toLowerCase() + "\"))");
-                if (type.startsWith("List")) {
-                    fieldLines.add("    @OrderColumn(name = \"" + var + "_order\")");
+                if (manyToMany) {
+                    fieldLines.add("    @ManyToMany");
+                    fieldLines.add("    @JoinTable(name = \"" + tableName + "_" + var + "\",");
+                    fieldLines.add("        joinColumns = @JoinColumn(name = \"" + tableName
+                            + "_id\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var + "\")),");
+                    fieldLines.add("        inverseJoinColumns = @JoinColumn(name = \"" + var
+                            + "_id\", foreignKey = @ForeignKey(name = \"fk_" + var + "_" + tableName + "\")))");
+                } else {
+                    fieldLines.add("    @OneToMany(fetch = FetchType.LAZY)");
+                    fieldLines.add("    @JoinColumn(name = \"" + fk + "\", foreignKey = @ForeignKey(name = \"fk_"
+                            + tableName + "_" + camelCaseBoundary.matcher(var).replaceAll("$1_$2").toLowerCase()
+                            + "\"))");
+                    if (type.startsWith("List")) {
+                        fieldLines.add("    @OrderColumn(name = \"" + var + "_order\")");
+                    }
                 }
                 fieldLines.add("    private " + type + " " + var + " = new "
                         + (type.startsWith("List") ? "ArrayList<>()" : "HashSet<>()") + ";");
                 fieldLines.add("");
-                customGetterSetter += "    public void addTo" + Character.toUpperCase(var.charAt(0)) + var.substring(1)
+                customGetterSetter += "    public void addTo" + Character.toUpperCase(var.charAt(0))
+                        + var.substring(1)
                         + "(" + elt + " element) {" + nl
                         + "        if (element == null) {" + nl
                         + "            throw new IllegalArgumentException(\"On ajoute pas un element null\");" + nl
@@ -414,6 +437,7 @@ public class RunMain {
                 String elt = m.find() ? m.group(1).trim() : "String";
                 String tbl = tableName + "_" + var;
                 String fk = tableName + "_id";
+
                 fieldLines.add("    @ElementCollection(fetch = FetchType.LAZY)");
                 fieldLines.add("    @CollectionTable(name = \"" + tbl + "\", joinColumns = @JoinColumn(name = \"" + fk
                         + "\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var + "\")))");
