@@ -245,7 +245,7 @@ public class RunMain {
                 }
                 String fk = tableName + "_id";
                 fieldLines
-                        .add("    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)");
+                        .add("    @OneToMany(fetch = FetchType.LAZY)");
                 fieldLines.add("    @JoinColumn(name = \"" + fk + "\", foreignKey = @ForeignKey(name = \"fk_"
                         + tableName + "_" + camelCaseBoundary.matcher(var).replaceAll("$1_$2").toLowerCase() + "\"))");
                 if (type.startsWith("List")) {
