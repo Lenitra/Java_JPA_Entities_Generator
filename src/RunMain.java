@@ -331,8 +331,8 @@ public class RunMain {
                 fieldLines.add("    @ElementCollection(fetch = FetchType.LAZY)");
                 fieldLines.add("    @CollectionTable(name = \"" + tbl + "\", joinColumns = @JoinColumn(name = \"" + fk
                         + "\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var + "\")))");
-                fieldLines.add("    @MapKeyColumn(name = \"" + var + "_key\")");
-                fieldLines.add("    @Column(name = \"" + var + "_value\")");
+                fieldLines.add("    @MapKeyJoinColumn(name = \"" + var + "_key\", nullable = false, foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var + "_key\"))");
+                fieldLines.add("    @Column(name = \"" + var + "_value\", nullable = false)");
                 fieldLines.add("    private Map<" + kt + ", " + vt + "> " + var + " = new HashMap<>();");
                 fieldLines.add("");
                 customGetterSetter += "    public void addTo" + Character.toUpperCase(var.charAt(0)) + var.substring(1)
