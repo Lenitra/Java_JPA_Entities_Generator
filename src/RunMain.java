@@ -273,7 +273,7 @@ public class RunMain {
                     fieldLines.add("            inverseJoinColumns = @JoinColumn(name = \"" + var + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var + "__" + var + "_id\")))");
                     fieldLines.add("    @MapKeyJoinColumn(name = \"" + var + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var + "_id\"))");
                     fieldLines.add("    private Map<" + kt + ", " + vt + "> " + var + " = new HashMap<>();");
-
+                    fieldLines.add("");
                     customGetterSetter += "    public void putTo" + Character.toUpperCase(var.charAt(0))
                             + var.substring(1)
                             + "(" + kt + " key, " + vt + " value) {" + nl
