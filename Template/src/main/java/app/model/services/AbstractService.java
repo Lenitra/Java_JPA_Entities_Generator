@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public class AbstractService<T, R extends JpaRepository<T, ID>, ID> implements IAbstractService<T, ID> {
+public abstract class AbstractService<T, R extends JpaRepository<T, ID>, ID> implements IAbstractService<T, ID> {
 
     protected R repository;
 

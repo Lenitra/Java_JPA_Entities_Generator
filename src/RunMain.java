@@ -126,11 +126,12 @@ public class RunMain {
         // en-tête de la factory
         sb.append("package app.model.entities;").append(nl).append(nl)
                 .append("import app.model.entities.enums.*;").append(nl)
+                .append("import app.model.entities.common.*;").append(nl)
                 .append("import java.time.LocalDate;").append(nl)
                 .append("import lombok.AccessLevel;").append(nl)
                 .append("import lombok.NoArgsConstructor;").append(nl).append(nl)
                 .append("@NoArgsConstructor(access = AccessLevel.PRIVATE)").append(nl).append(nl)
-                .append("public class EntityFactory {").append(nl).append(nl);
+                .append("public final class EntityFactory {").append(nl).append(nl);
 
         // pour chaque entité déclarée dans entities.txt
         for (int i = 0; i < lines.size(); i++) {
@@ -171,12 +172,12 @@ public class RunMain {
             // génération de la méthode createNomEntité(...)
             sb.append("    public static ").append(name)
                     .append(" create").append(name).append("(")
-                    .append(String.join(", ", params)).append(") {").append(nl)
+                    .append(String.join(", ", params)).append(") throws ValidException {").append(nl)
                     .append("        ").append(name).append(" obj = new ").append(name).append("();").append(nl);
             for (String s : setters) {
                 sb.append(s).append(nl);
             }
-            sb.append("        return ValidUtil.isValid(obj);").append(nl)
+            sb.append("        return ValidUtil.isValide(obj);").append(nl)
                     .append("    }").append(nl).append(nl);
 
             // on saute les lignes d'attributs
