@@ -239,7 +239,8 @@ public class RunMain {
                         sizeAnn.append(", ");
                     if (maxVal != null)
                         sizeAnn.append("max = ").append(maxVal);
-                    sizeAnn.append(")");
+                    sizeAnn.append(", message = \"La taille doit etre comprise entre ").append(minVal).append(" et ")
+                            .append(maxVal).append("\")");
                     fieldLines.add(sizeAnn.toString());
                 }
                 String fk = tableName + "_id";
@@ -279,7 +280,8 @@ public class RunMain {
                         sizeAnn.append(", ");
                     if (maxVal != null)
                         sizeAnn.append("max = ").append(maxVal);
-                    sizeAnn.append(")");
+                    sizeAnn.append(", message = \"La taille doit etre comprise entre ").append(minVal).append(" et ")
+                            .append(maxVal).append("\")");
                     fieldLines.add(sizeAnn.toString());
                 }
                 fieldLines.add("    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)");
@@ -319,7 +321,8 @@ public class RunMain {
                         sizeAnn.append(", ");
                     if (maxVal != null)
                         sizeAnn.append("max = ").append(maxVal);
-                    sizeAnn.append(")");
+                    sizeAnn.append(", message = \"La taille doit etre comprise entre ").append(minVal).append(" et ")
+                            .append(maxVal).append("\")");
                     fieldLines.add(sizeAnn.toString());
                 }
                 fieldLines.add("    @ElementCollection(fetch = FetchType.LAZY)");
@@ -332,7 +335,7 @@ public class RunMain {
                 customGetterSetter += "    public void addTo" + Character.toUpperCase(var.charAt(0)) + var.substring(1)
                         + "(" + kt + " key, " + vt + " value) {" + nl
                         + "        if (key == null || value == null) {" + nl
-                        + "            throw new IllegalArgumentException(\"Key ou Value ne peuvent pas être null\");"
+                        + "            throw new IllegalArgumentException(\"Key ou Value ne peuvent pas etre null\");"
                         + nl
                         + "        }" + nl
                         + "        this." + var + ".put(key, value);" + nl
@@ -380,18 +383,20 @@ public class RunMain {
                             sizeAnn.append(", ");
                         if (maxVal != null)
                             sizeAnn.append("max = ").append(maxVal);
-                        sizeAnn.append(")");
+                        sizeAnn.append(", message = \"La taille doit etre comprise entre ").append(minVal)
+                                .append(" et ").append(maxVal).append("\")");
                         fieldLines.add(sizeAnn.toString());
                     }
                     fieldLines.add("    @NotBlank(message = \"Ne peut pas etre vide\")");
                 } else if (type.matches("(?:byte|short|int|long|float|double|Byte|Short|Integer|Long|Float|Double)")) {
                     if (minVal != null)
-                        fieldLines.add("    @Min(" + minVal + ", message=\"La valeur minimale est :" +minVal+ " \")");
+                        fieldLines.add("    @Min(value = " + minVal + ", message=\"La valeur minimale est :" + minVal + " \")");
                     if (maxVal != null)
-                        fieldLines.add("    @Max(value = " + maxVal + ", message=\"La valeur maximale est :" + maxVal + " \")");
+                        fieldLines.add("    @Max(value = " + maxVal + ", message=\"La valeur maximale est :" + maxVal
+                                + " \")");
                 }
                 if (required)
-                    fieldLines.add("    @NotNull(message = \"Ce champ ne peut pas être null\")");
+                    fieldLines.add("    @NotNull(message = \"Ce champ ne peut pas etre null\")");
 
                 // 3. Column avec longueur si applicable
                 StringBuilder colAnn = new StringBuilder("    @Column(name = \"" + col + "\"");
@@ -585,7 +590,7 @@ public class RunMain {
         if (configs.containsKey(ideKey) && !configs.get(ideKey).isEmpty()) {
             Path idePath = Paths.get(configs.get(ideKey));
             if (!idePath.isAbsolute()) {
-                showError("intellij_project_path doit être un chemin absolu");
+                showError("intellij_project_path doit etre un chemin absolu");
                 return;
             }
             copyDirectory(tmpDir, idePath);
