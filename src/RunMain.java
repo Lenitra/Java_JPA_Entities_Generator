@@ -408,45 +408,6 @@ public class RunMain {
                         + "    }" + nl + nl;
             }
 
-            // 3. ManyToMany bidirectionnel (Set<Entité>)
-            else if (type.startsWith("Set") && m.find()) {
-                String elt = m.group(1).trim();
-                String jt = tableName + "_" + var;
-                if (minVal != null || maxVal != null) {
-                    StringBuilder sizeAnn = new StringBuilder("    @Size(");
-                    if (minVal != null)
-                        sizeAnn.append("min = ").append(minVal);
-                    if (minVal != null && maxVal != null)
-                        sizeAnn.append(", ");
-                    if (maxVal != null)
-                        sizeAnn.append("max = ").append(maxVal);
-                    sizeAnn.append(", message = \"La taille doit etre comprise entre ").append(minVal).append(" et ")
-                            .append(maxVal).append("\")");
-                    fieldLines.add(sizeAnn.toString());
-                }
-                fieldLines.add("    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)");
-                fieldLines.add("    @JoinTable(name = \"" + jt + "\",");
-                fieldLines.add("        joinColumns = @JoinColumn(name = \"" + tableName
-                        + "_id\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var + "\")),");
-                fieldLines.add("        inverseJoinColumns = @JoinColumn(name = \"" + var
-                        + "_id\", foreignKey = @ForeignKey(name = \"fk_" + var + "_" + tableName + "\"))");
-                fieldLines.add("    )");
-                fieldLines.add("    private Set<" + elt + "> " + var + " = new HashSet<>();");
-                fieldLines.add("");
-                customGetterSetter += "    public void addTo" + Character.toUpperCase(var.charAt(0)) + var.substring(1)
-                        + "(" + elt + " element) {" + nl
-                        + "        if (element == null) {" + nl
-                        + "            throw new IllegalArgumentException(\"On ajoute pas un element null\");" + nl
-                        + "        }" + nl
-                        + "        this." + var + ".add(element);" + nl
-                        + "    }" + nl + nl;
-                customGetterSetter += "    public " + type + " get" + Character.toUpperCase(var.charAt(0))
-                        + var.substring(1) + "() {" + nl
-                        + "        return Collections.unmodifiable" + (type.startsWith("List") ? "List" : "Set")
-                        + "(this." + var + ");" + nl
-                        + "    }" + nl + nl;
-            }
-
             // 5. ElementCollection pour List<Type> ou Set<Type> de basiques
             else if ((type.startsWith("List") || type.startsWith("Set") || type.startsWith("Collection"))) {
                 String coll = type.startsWith("List") ? "List" : "Set";
