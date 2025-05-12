@@ -232,6 +232,10 @@ public class RunMain {
             String raw = lines.get(j).trim().substring(1).trim();
             boolean required = raw.contains("*");
             boolean manyToMany = false;
+            boolean notNull = false;
+            if (raw.contains("*") || raw.contains(".nn")){
+                notNull = true;
+            }
             if (raw.contains(".mtm")) {
                 manyToMany = true;
             }
@@ -485,7 +489,7 @@ public class RunMain {
                         fieldLines.add("    @Max(value = " + maxVal + ", message=\"La valeur maximale est :" + maxVal
                                 + " \")");
                 }
-                if (required)
+                if (required || notNull)
                     fieldLines.add("    @NotNull(message = \"Ce champ ne peut pas etre null\")");
 
                 // 3. Column avec longueur si applicable

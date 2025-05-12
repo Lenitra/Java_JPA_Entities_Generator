@@ -20,7 +20,8 @@ c:nomClasse
 e:nomEnum
 ```
 ### Arguments pour les attributs
-"*" pour signifier l'unicité <br>
+"*" pour signifier l'unicité ajoute l'annotation NotNull<br>
+".nn" pour ajouter le @NotNull <br>
 "+<int>" permet de metre une valeur maximale <br>
 "-<int>" permet de metre une valeur minimale <br>
 ".otm" permet de mettre une liste en @OneToMany (valeur par défaut) <br>
