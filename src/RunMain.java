@@ -268,7 +268,7 @@ public class RunMain {
                 String vt = kv[1].trim();
                 boolean keyBasic = basicTypes.contains(kt);
                 boolean valBasic = basicTypes.contains(vt);
-                String tbl = tableName + "_" + var;
+                String tbl = tableName + "_" + var.toLowerCase();
                 String fk = tableName + "_id";
 
                 // 1) clé et valeur = entités
@@ -276,13 +276,13 @@ public class RunMain {
                     fieldLines.add("    @OneToMany(fetch = FetchType.LAZY)");
                     fieldLines.add("    @JoinTable( name = \"" + tableName + "_" + var + "\",");
                     fieldLines.add("            joinColumns = @JoinColumn(name = \"" + tableName
-                            + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var + "__" + tableName
+                            + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var.toLowerCase() + "__" + tableName
                             + "_id\")),");
-                    fieldLines.add("            inverseJoinColumns = @JoinColumn(name = \"" + var
-                            + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var + "__" + var
+                    fieldLines.add("            inverseJoinColumns = @JoinColumn(name = \"" + var.toLowerCase()
+                            + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var.toLowerCase() + "__" + var.toLowerCase()
                             + "_id\")))");
                     fieldLines.add("    @MapKeyJoinColumn(name = \"" + var
-                            + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var + "_id\"))");
+                            + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var.toLowerCase() + "_id\"))");
                     fieldLines.add("    private Map<" + kt + ", " + vt + "> " + var + " = new HashMap<>();");
                     fieldLines.add("");
                     customGetterSetter += "    public void putTo" + Character.toUpperCase(var.charAt(0))
@@ -398,18 +398,18 @@ public class RunMain {
                 String fk = tableName + "_id";
                 if (manyToMany) {
                     fieldLines.add("    @ManyToMany");
-                    fieldLines.add("    @JoinTable(name = \"" + tableName + "_" + var + "\",");
+                    fieldLines.add("    @JoinTable(name = \"" + tableName + "_" + var.toLowerCase() + "\",");
                     fieldLines.add("        joinColumns = @JoinColumn(name = \"" + tableName
-                            + "_id\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var + "\")),");
-                    fieldLines.add("        inverseJoinColumns = @JoinColumn(name = \"" + var
-                            + "_id\", foreignKey = @ForeignKey(name = \"fk_" + var + "_" + tableName + "\")))");
+                            + "_id\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var.toLowerCase() + "\")),");
+                    fieldLines.add("        inverseJoinColumns = @JoinColumn(name = \"" + var.toLowerCase()
+                            + "_id\", foreignKey = @ForeignKey(name = \"fk_" + var.toLowerCase() + "_" + tableName + "\")))");
                 } else {
                     fieldLines.add("    @OneToMany(fetch = FetchType.LAZY)");
                     fieldLines.add("    @JoinColumn(name = \"" + fk + "\", foreignKey = @ForeignKey(name = \"fk_"
                             + tableName + "_" + camelCaseBoundary.matcher(var).replaceAll("$1_$2").toLowerCase()
                             + "\"))");
                     if (type.startsWith("List")) {
-                        fieldLines.add("    @OrderColumn(name = \"" + var + "_order\")");
+                        fieldLines.add("    @OrderColumn(name = \"" + var.toLowerCase() + "_order\")");
                     }
                 }
                 fieldLines.add("    private " + type + " " + var + " = new "
@@ -435,12 +435,12 @@ public class RunMain {
             else if ((type.startsWith("List") || type.startsWith("Set") || type.startsWith("Collection"))) {
                 String coll = type.startsWith("List") ? "List" : "Set";
                 String elt = m.find() ? m.group(1).trim() : "String";
-                String tbl = tableName + "_" + var;
+                String tbl = tableName + "_" + var.toLowerCase();
                 String fk = tableName + "_id";
 
                 fieldLines.add("    @ElementCollection(fetch = FetchType.LAZY)");
                 fieldLines.add("    @CollectionTable(name = \"" + tbl + "\", joinColumns = @JoinColumn(name = \"" + fk
-                        + "\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var + "\")))");
+                        + "\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var.toLowerCase() + "\")))");
                 fieldLines.add("    private " + coll + "<" + elt + "> " + var + " = new "
                         + (coll.equals("List") ? "ArrayList<>()" : "HashSet<>()") + ";");
                 fieldLines.add("");
