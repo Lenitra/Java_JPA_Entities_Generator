@@ -22,9 +22,9 @@ e:nomEnum
 ### Arguments pour les attributs
 "*" pour signifier l'unicité <br>
 "+<int>" permet de metre une valeur maximale <br>
-"-<int>" permet de metre une valeur minimale <br><br>
+"-<int>" permet de metre une valeur minimale <br>
 ".otm" permet de mettre une liste en @OneToMany (valeur par défaut) <br>
-".mtm" permet de mettre une liste en @ManyToMany, par défaut elle sera en @OneToMany <br>
+".mtm" permet de mettre une liste en @ManyToMany, par défaut elle sera en @OneToMany <br><br>
 **/!\ Bien mettre des espaces entre les arguments !**
 
 ## 2. Renseigner les données dans `projectSettings.txt`
