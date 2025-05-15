@@ -1,7 +1,7 @@
 package app.model.commands;
 
-import app.model.services.ChargementFichierService;
 import app.model.commands.commons.*;
+import app.model.services.interfaces.IChargementFichierService;
 import jakarta.validation.constraints.NotBlank;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ public class ChargementFichierCommand {
     private final ShellHelper shellHelper;
 
     @NonNull
-    private final ChargementFichierService chargementFichierService;
+    private final IChargementFichierService chargementFichierService;
 
     @ShellMethod(value = "permet de charger un fichier", key = "chgt-file")
     public String chargementFichierCommand(
@@ -28,7 +28,7 @@ public class ChargementFichierCommand {
             @ShellOption(value = {"-c","--typeClasse"}, help = "Type de la classe pour le fichier concerner") @NotBlank String typeClasse
     ) {
         try {
-        Path path = Paths.get(file);
+            Path path = Paths.get(file);
 
             chargementFichierService.chargerFichier(path,typeClasse);
             return shellHelper.getSuccessMessage("Le fichier a été chargé correctement.");

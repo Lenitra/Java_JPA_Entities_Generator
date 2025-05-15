@@ -1,4 +1,4 @@
-package guilde.models.commands.commons;
+package app.model.commands.commons;
 
 public enum PromptColor {
     BLACK(0),

@@ -1,6 +1,8 @@
-package app.model.services.impl;
+package app.model.services;
 
 import app.model.entities.*;
+import app.model.services.exceptions.ServiceException;
+import app.model.services.interfaces.IChargementFichierService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,7 +15,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ChargementFichierServiceImpl implements ChargementFichierService {
+public class ChargementFichierService implements IChargementFichierService {
 
     // @NonNull
     // GuildeService guildeService;

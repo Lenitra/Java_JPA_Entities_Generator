@@ -1,4 +1,4 @@
-package guilde.models.commands.commons;
+package app.model.commands.commons;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

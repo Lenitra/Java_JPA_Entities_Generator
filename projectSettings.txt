@@ -1,2 +1,2 @@
-database_name=java_ava_test_int_hockey
+database_name=java_ava_test_int_jv
 intelij_project_path=D:\Utilisateurs\thomas.lemartinel\Desktop\JavaAvance\HokeyProject

@@ -1,4 +1,4 @@
-package guilde.models.commands.commons;
+package app.model.commands.commons;
 
 import org.jline.reader.LineReader;
 import org.jline.terminal.Terminal;
