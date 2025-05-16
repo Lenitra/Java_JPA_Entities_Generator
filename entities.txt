@@ -1,21 +1,14 @@
-c:Championnat
-- Set<Equipe> classement
-- int anneeChampionnat * -0
-- String nomChampionnat * -2 +50
-- Set<Match> lesMatchs 
-c:Equipe
-- String nom * -3 +100
-- Ville ville * +50
-- Set<Joueur> listeJoueurs .mtm
-c:Joueur
-- String prenom * -3 +50
-- String nom * -3 +50
+c:Stagiaire
+- String nom * +50 -3
+- String prenom * +50 -3
+- Map<Matiere,Float> notes
 - LocalDate dateNaissance *
-- int nbPoint --1
-- Poste poste +15
-c:Match
-- Ville ville *
-- LocalDate dateMatch *
-- Map<Joueur,Integer> score
-e:Ville
-e:Poste
+- float moyenne
+
+c:Stage
+- Set<Stagiaire> stagiaires .nn -1
+- String code * -4 +4
+- LocalDate dateFin
+- LocalDate datDebut
+
+e:Matiere
