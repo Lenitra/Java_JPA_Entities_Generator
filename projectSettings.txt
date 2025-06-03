@@ -1,2 +1,2 @@
-database_name=geststage
-intelij_project_path=D:\Utilisateurs\thomas.lemartinel\Desktop\JavaAvance\test_final
+database_name=order_products
+intelij_project_path=

@@ -69,4 +69,3 @@ if errorlevel 1 (
 echo [5/5] Exécution de la classe src/RunMain...
 "%JAVA_EXEC%" -XX:+ShowCodeDetailsInExceptionMessages -cp "%BIN_DIR%" RunMain
 echo Exécution terminée.
-pause

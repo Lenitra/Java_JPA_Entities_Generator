@@ -12,10 +12,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-
-
-
-
 public class RunMain {
 
     public static void main(String[] args) {
@@ -43,6 +39,7 @@ public class RunMain {
             Path interfacesDir = servicesDir.resolve("interfaces");
             Path commandsDir = tmpDir.resolve("src/main/java/app/model/commands");
             Path propertiesFile = tmpDir.resolve("src/main/resources/application.properties");
+            Path controllersDir = tmpDir.resolve("src/main/java/app/model/controllers");
 
             Files.createDirectories(entityDir);
             Files.createDirectories(enumDir);
@@ -68,7 +65,8 @@ public class RunMain {
                     generateDao(name, daoDir);
                     generateServiceInterface(name, interfacesDir);
                     generateServiceImplementation(name, servicesDir);
-                    generateCommands(name, commandsDir);
+                    // generateCommands(name, commandsDir);
+                    generateControllers(name, controllersDir);
                     i = skipAttributes(lines, i);
                 } else if (raw.startsWith("e:")) {
                     String name = raw.substring(2).trim();
@@ -237,7 +235,7 @@ public class RunMain {
             boolean required = raw.contains("*");
             boolean manyToMany = false;
             boolean notNull = false;
-            if (raw.contains("*") || raw.contains(".nn")){
+            if (raw.contains("*") || raw.contains(".nn")) {
                 notNull = true;
             }
             if (raw.contains(".mtm")) {
@@ -284,13 +282,16 @@ public class RunMain {
                     fieldLines.add("    @OneToMany(fetch = FetchType.LAZY)");
                     fieldLines.add("    @JoinTable( name = \"" + tableName + "_" + var + "\",");
                     fieldLines.add("            joinColumns = @JoinColumn(name = \"" + tableName
-                            + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var.toLowerCase() + "__" + tableName
+                            + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var.toLowerCase()
+                            + "__" + tableName
                             + "_id\")),");
                     fieldLines.add("            inverseJoinColumns = @JoinColumn(name = \"" + var.toLowerCase()
-                            + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var.toLowerCase() + "__" + var.toLowerCase()
+                            + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var.toLowerCase()
+                            + "__" + var.toLowerCase()
                             + "_id\")))");
                     fieldLines.add("    @MapKeyJoinColumn(name = \"" + var
-                            + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var.toLowerCase() + "_id\"))");
+                            + "_id\", foreignKey = @ForeignKey(name = \"fk__" + tableName + "_" + var.toLowerCase()
+                            + "_id\"))");
                     fieldLines.add("    private Map<" + kt + ", " + vt + "> " + var + " = new HashMap<>();");
                     fieldLines.add("");
                     customGetterSetter += "    public void putTo" + Character.toUpperCase(var.charAt(0))
@@ -408,9 +409,11 @@ public class RunMain {
                     fieldLines.add("    @ManyToMany");
                     fieldLines.add("    @JoinTable(name = \"" + tableName + "_" + var.toLowerCase() + "\",");
                     fieldLines.add("        joinColumns = @JoinColumn(name = \"" + tableName
-                            + "_id\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var.toLowerCase() + "\")),");
+                            + "_id\", foreignKey = @ForeignKey(name = \"fk_" + tableName + "_" + var.toLowerCase()
+                            + "\")),");
                     fieldLines.add("        inverseJoinColumns = @JoinColumn(name = \"" + var.toLowerCase()
-                            + "_id\", foreignKey = @ForeignKey(name = \"fk_" + var.toLowerCase() + "_" + tableName + "\")))");
+                            + "_id\", foreignKey = @ForeignKey(name = \"fk_" + var.toLowerCase() + "_" + tableName
+                            + "\")))");
                 } else {
                     fieldLines.add("    @OneToMany(fetch = FetchType.LAZY)");
                     fieldLines.add("    @JoinColumn(name = \"" + fk + "\", foreignKey = @ForeignKey(name = \"fk_"
@@ -763,6 +766,108 @@ public class RunMain {
 
     }
 
+    private static void generateControllers(String name, Path controllersDir) throws IOException {
+        String src = "package app.controllers;" + System.lineSeparator()+
+        "import app.model.entities." + name + ";" + System.lineSeparator()+
+        "import app.model.services.*;" + System.lineSeparator()+
+        "import org.springframework.web.bind.annotation.GetMapping;" + System.lineSeparator()+
+        "import org.springframework.web.bind.annotation.RequestMapping;" + System.lineSeparator()+
+        "import org.springframework.web.bind.annotation.RestController;" + System.lineSeparator()+
+         System.lineSeparator()+
+         "@RestController" + System.lineSeparator()+
+         "@RequestMapping(\"/api/v1/" + name.toLowerCase() + "s\")" + System.lineSeparator()+
+         "public class " + name + "Controller {" + System.lineSeparator()+
+         System.lineSeparator()+
+         "    private final " + name + "Service "+name.toLowerCase()+"Service;" + System.lineSeparator()+
+         System.lineSeparator()+
+        "    public " + name + "Controller(" + name + "Service " + name.toLowerCase() + "Service) {" + System.lineSeparator()+
+        "        this." + name.toLowerCase() + "Service = " + name.toLowerCase() + "Service;" + System.lineSeparator()+
+        "    }" + System.lineSeparator()+
+        System.lineSeparator()+
+        "    @GetMapping(\"/\")" + System.lineSeparator()+
+        "    public ResponseEntity<Iterable<" + name + ">> getAll() {" + System.lineSeparator()+
+        "        try {"+ System.lineSeparator()+
+        "            return ResponseEntity.ok(" + name.toLowerCase() + "Service.findAll());" + System.lineSeparator()+
+        "        } catch (ServiceException e) {" + System.lineSeparator()+
+        "            return ResponseEntity.internalServerError().build();" + System.lineSeparator()+
+        "        }" + System.lineSeparator()+
+        "    }" + System.lineSeparator()+
+        System.lineSeparator()+
+        "    @GetMapping(\"/count/\")" + System.lineSeparator()+
+        "    public ResponseEntity<long> count() {" + System.lineSeparator()+
+        "        try {"+ System.lineSeparator()+
+        "            return ResponseEntity.ok(" + name.toLowerCase() + "Service.count());" + System.lineSeparator()+
+        "        } catch (ServiceException e) {" + System.lineSeparator()+
+        "            return ResponseEntity.internalServerError().build();" + System.lineSeparator()+
+        "        }" + System.lineSeparator()+
+        "    }" + System.lineSeparator()+
+        System.lineSeparator()+
+        "    @GetMapping(\"/{id}/\")" + System.lineSeparator()+
+        "    public ResponseEntity<" + name + "> get"+name+"(@PathVariable(\"id\") Long id) {" + System.lineSeparator()+
+        "        try {" + System.lineSeparator()+
+        "            Optional<" + name + "> opt = " + name.toLowerCase() + "Service.findById(id);" + System.lineSeparator()+
+        "            if (opt.isPresent()) {" + System.lineSeparator()+
+        "                return ResponseEntity.ok(opt.get());" + System.lineSeparator()+
+        "            } else {" + System.lineSeparator()+
+        "                return ResponseEntity.notFound().build();" + System.lineSeparator()+
+        "            }" + System.lineSeparator()+
+        "        } catch (ServiceException e) {" + System.lineSeparator()+
+        "            return ResponseEntity.internalServerError().build();" + System.lineSeparator()+
+        "        }" + System.lineSeparator()+
+        "    }" + System.lineSeparator()+
+        System.lineSeparator()+
+        "    @PutMapping(\"/{id}/\")" + System.lineSeparator()+
+        "        public ResponseEntity<" + name + "> update" + name + "(@PathVariable(\"id\") Long id, @RequestBody " + name + " updated" + name + ") {" + System.lineSeparator()+
+        "            try {" + System.lineSeparator()+
+        "                if (updated" + name + ".getId() == null || !updated" + name + ".getId().equals(id)) {" + System.lineSeparator()+
+        "                    return ResponseEntity.badRequest().build();" + System.lineSeparator()+
+        "                }" + System.lineSeparator()+
+        "                Optional<" + name + "> opt = " + name.toLowerCase() + "Service.findById(id);" + System.lineSeparator()+
+        "                if (opt.isPresent()) {" + System.lineSeparator()+
+        "                    opt = " + name.toLowerCase() + "Service.save(updated" + name + ");" + System.lineSeparator()+
+        "                    return ResponseEntity.ok(opt.get());" + System.lineSeparator()+
+        "                } else {" + System.lineSeparator()+
+        "                    return ResponseEntity.notFound().build();" + System.lineSeparator()+
+        "                }" + System.lineSeparator()+
+        "            } catch (ServiceException e) {" + System.lineSeparator()+
+        "                return ResponseEntity.internalServerError().build();" + System.lineSeparator()+
+        "            }" + System.lineSeparator()+
+        "        }" + System.lineSeparator()+
+        System.lineSeparator()+
+        System.lineSeparator()+
+        "    @PostMapping(\"/\")" + System.lineSeparator()+
+        "    public ResponseEntity<" + name + "> create" + name + "(@RequestBody " + name + " new" + name + ") {" + System.lineSeparator()+
+        "        try {" + System.lineSeparator()+
+        "            if (new" + name + ".getId() != null) {" + System.lineSeparator()+
+        "                return ResponseEntity.badRequest().build();" + System.lineSeparator()+
+        "            }" + System.lineSeparator()+
+        "            " + name + " created" + name + " = " + name.toLowerCase() + "Service.save(new" + name + ");" + System.lineSeparator()+
+        "            return ResponseEntity.status(HttpStatus.CREATED).body(created" + name + ");" + System.lineSeparator()+
+        "        } catch (ServiceException e) {" + System.lineSeparator()+
+        "            return ResponseEntity.internalServerError().build();" + System.lineSeparator()+
+        "        }" + System.lineSeparator()+
+        "    }" + System.lineSeparator()+
+        System.lineSeparator()+
+        "    @DeleteMapping(\"/{id}/\")" + System.lineSeparator()+
+        "    public ResponseEntity<Void> delete" + name + "(@PathVariable(\"id\") Long id) {" + System.lineSeparator()+
+        "        try {" + System.lineSeparator()+
+        "            Optional<" + name + "> opt = " + name.toLowerCase() + "Service.findById(id);" + System.lineSeparator()+
+        "            if (opt.isPresent()) {" + System.lineSeparator()+
+        "                " + name.toLowerCase() + "Service.delete(opt.get());" + System.lineSeparator()+
+        "                return ResponseEntity.noContent().build();" + System.lineSeparator()+
+        "            } else {" + System.lineSeparator()+
+        "                return ResponseEntity.notFound().build();" + System.lineSeparator()+
+        "            }" + System.lineSeparator()+
+        "        } catch (ServiceException e) {" + System.lineSeparator()+
+        "            return ResponseEntity.internalServerError().build();" + System.lineSeparator()+
+        "        }" + System.lineSeparator()+
+        "    }" + System.lineSeparator()+
+        System.lineSeparator()+
+        "}";
+        Files.write(controllersDir.resolve(name + "Controller.java"), src.getBytes(StandardCharsets.UTF_8));
+        showInfo("Controller généré: " + name + "Controller");
+        
 
+    }
 
 }

@@ -1,14 +1,17 @@
-c:Stagiaire
-- String nom * +50 -3
-- String prenom * +50 -3
-- Map<Matiere,Float> notes
-- LocalDate dateNaissance *
-- float moyenne
+c:Product
+- Long id *
+- String name * -130
+- double price -0
+-int stockQuantity -0
 
-c:Stage
-- Set<Stagiaire> stagiaires .nn -1
-- String code * -4 +4
-- LocalDate dateFin
-- LocalDate datDebut
+c:Order
+- Long id *
+- LocalDate orderDate *
+- double totalAmount -0
 
-e:Matiere
+c:OrderItem
+- Long id *
+- Order order .nn
+- Product product .nn
+- int quantity +0
+- double unitPrice +0
