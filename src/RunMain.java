@@ -68,6 +68,7 @@ public class RunMain {
                     generateServiceImplementation(name, servicesDir);
                     // generateCommands(name, commandsDir);
                     generateControllers(name, controllersDir);
+                    generateDto(name, dtoPath);
                     i = skipAttributes(lines, i);
                 } else if (raw.startsWith("e:")) {
                     String name = raw.substring(2).trim();
