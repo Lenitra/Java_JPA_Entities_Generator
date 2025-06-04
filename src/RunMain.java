@@ -37,9 +37,10 @@ public class RunMain {
             Path daoDir = tmpDir.resolve("src/main/java/app/model/dao");
             Path servicesDir = tmpDir.resolve("src/main/java/app/model/services");
             Path interfacesDir = servicesDir.resolve("interfaces");
-            Path commandsDir = tmpDir.resolve("src/main/java/app/model/commands");
+            Path commandsDir =    tmpDir.resolve("src/main/java/app/model/commands");
             Path propertiesFile = tmpDir.resolve("src/main/resources/application.properties");
             Path controllersDir = tmpDir.resolve("src/main/java/app/model/controllers");
+            Path dtoPath =        tmpDir.resolve("src/main/java/app/model/dto");
 
             Files.createDirectories(entityDir);
             Files.createDirectories(enumDir);
@@ -773,13 +774,13 @@ public class RunMain {
         "import org.springframework.web.bind.annotation.GetMapping;" + System.lineSeparator()+
         "import org.springframework.web.bind.annotation.RequestMapping;" + System.lineSeparator()+
         "import org.springframework.web.bind.annotation.RestController;" + System.lineSeparator()+
-         System.lineSeparator()+
-         "@RestController" + System.lineSeparator()+
-         "@RequestMapping(\"/api/v1/" + name.toLowerCase() + "s\")" + System.lineSeparator()+
-         "public class " + name + "Controller {" + System.lineSeparator()+
-         System.lineSeparator()+
-         "    private final " + name + "Service "+name.toLowerCase()+"Service;" + System.lineSeparator()+
-         System.lineSeparator()+
+        System.lineSeparator()+
+        "@RestController" + System.lineSeparator()+
+        "@RequestMapping(\"/api/v1/" + name.toLowerCase() + "s\")" + System.lineSeparator()+
+        "public class " + name + "Controller {" + System.lineSeparator()+
+        System.lineSeparator()+
+        "    private final " + name + "Service "+name.toLowerCase()+"Service;" + System.lineSeparator()+
+        System.lineSeparator()+
         "    public " + name + "Controller(" + name + "Service " + name.toLowerCase() + "Service) {" + System.lineSeparator()+
         "        this." + name.toLowerCase() + "Service = " + name.toLowerCase() + "Service;" + System.lineSeparator()+
         "    }" + System.lineSeparator()+
@@ -866,8 +867,21 @@ public class RunMain {
         "}";
         Files.write(controllersDir.resolve(name + "Controller.java"), src.getBytes(StandardCharsets.UTF_8));
         showInfo("Controller généré: " + name + "Controller");
-        
-
     }
 
+    public static void generateDto(String name, Path dtoDir) throws IOException {
+        String src = "package app.model.dto;" + System.lineSeparator() +
+                "import lombok.Data;" + System.lineSeparator() +
+                "import java.time.LocalDate;" + System.lineSeparator() +
+                System.lineSeparator() +
+                "@Data" + System.lineSeparator() +
+                "public class " + name + "Dto {" + System.lineSeparator() +
+                "    private Long id;" + System.lineSeparator() +
+                "    private String name;" + System.lineSeparator() +
+                "    private LocalDate createdAt;" + System.lineSeparator() +
+                "}";
+        Files.write(dtoDir.resolve(name + "Dto.java"), src.getBytes(StandardCharsets.UTF_8));
+        showInfo("DTO généré: " + name + "Dto");
+
+    }
 }
