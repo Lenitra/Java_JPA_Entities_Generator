@@ -37,10 +37,11 @@ public class RunMain {
             Path daoDir = tmpDir.resolve("src/main/java/app/model/dao");
             Path servicesDir = tmpDir.resolve("src/main/java/app/model/services");
             Path interfacesDir = servicesDir.resolve("interfaces");
-            Path commandsDir =    tmpDir.resolve("src/main/java/app/model/commands");
+            Path commandsDir = tmpDir.resolve("src/main/java/app/model/commands");
             Path propertiesFile = tmpDir.resolve("src/main/resources/application.properties");
             Path controllersDir = tmpDir.resolve("src/main/java/app/model/controllers");
-            Path dtoPath =        tmpDir.resolve("src/main/java/app/model/dto");
+            Path dtoPath = tmpDir.resolve("src/main/java/app/model/controllers/dto");
+            Path assemblersPath = tmpDir.resolve("src/main/java/app/model/controllers/dto/assemblers");
 
             Files.createDirectories(entityDir);
             Files.createDirectories(enumDir);
@@ -63,12 +64,13 @@ public class RunMain {
                 if (raw.startsWith("c:")) {
                     String name = raw.substring(2).trim();
                     generateEntity(name, lines, i, entityDir);
+                    generateDto(name, dtoPath, lines, i);
+                    generateAssemblers(name, assemblersPath, lines, i);
                     generateDao(name, daoDir);
                     generateServiceInterface(name, interfacesDir);
                     generateServiceImplementation(name, servicesDir);
                     // generateCommands(name, commandsDir);
                     generateControllers(name, controllersDir);
-                    generateDto(name, dtoPath);
                     i = skipAttributes(lines, i);
                 } else if (raw.startsWith("e:")) {
                     String name = raw.substring(2).trim();
@@ -769,120 +771,287 @@ public class RunMain {
     }
 
     private static void generateControllers(String name, Path controllersDir) throws IOException {
-        String src = "package app.controllers;" + System.lineSeparator()+
-        "import app.model.entities." + name + ";" + System.lineSeparator()+
-        "import app.model.services.*;" + System.lineSeparator()+
-        "import org.springframework.web.bind.annotation.GetMapping;" + System.lineSeparator()+
-        "import org.springframework.web.bind.annotation.RequestMapping;" + System.lineSeparator()+
-        "import org.springframework.web.bind.annotation.RestController;" + System.lineSeparator()+
-        System.lineSeparator()+
-        "@RestController" + System.lineSeparator()+
-        "@RequestMapping(\"/api/v1/" + name.toLowerCase() + "s\")" + System.lineSeparator()+
-        "public class " + name + "Controller {" + System.lineSeparator()+
-        System.lineSeparator()+
-        "    private final " + name + "Service "+name.toLowerCase()+"Service;" + System.lineSeparator()+
-        System.lineSeparator()+
-        "    public " + name + "Controller(" + name + "Service " + name.toLowerCase() + "Service) {" + System.lineSeparator()+
-        "        this." + name.toLowerCase() + "Service = " + name.toLowerCase() + "Service;" + System.lineSeparator()+
-        "    }" + System.lineSeparator()+
-        System.lineSeparator()+
-        "    @GetMapping(\"/\")" + System.lineSeparator()+
-        "    public ResponseEntity<Iterable<" + name + ">> getAll() {" + System.lineSeparator()+
-        "        try {"+ System.lineSeparator()+
-        "            return ResponseEntity.ok(" + name.toLowerCase() + "Service.findAll());" + System.lineSeparator()+
-        "        } catch (ServiceException e) {" + System.lineSeparator()+
-        "            return ResponseEntity.internalServerError().build();" + System.lineSeparator()+
-        "        }" + System.lineSeparator()+
-        "    }" + System.lineSeparator()+
-        System.lineSeparator()+
-        "    @GetMapping(\"/count/\")" + System.lineSeparator()+
-        "    public ResponseEntity<long> count() {" + System.lineSeparator()+
-        "        try {"+ System.lineSeparator()+
-        "            return ResponseEntity.ok(" + name.toLowerCase() + "Service.count());" + System.lineSeparator()+
-        "        } catch (ServiceException e) {" + System.lineSeparator()+
-        "            return ResponseEntity.internalServerError().build();" + System.lineSeparator()+
-        "        }" + System.lineSeparator()+
-        "    }" + System.lineSeparator()+
-        System.lineSeparator()+
-        "    @GetMapping(\"/{id}/\")" + System.lineSeparator()+
-        "    public ResponseEntity<" + name + "> get"+name+"(@PathVariable(\"id\") Long id) {" + System.lineSeparator()+
-        "        try {" + System.lineSeparator()+
-        "            Optional<" + name + "> opt = " + name.toLowerCase() + "Service.findById(id);" + System.lineSeparator()+
-        "            if (opt.isPresent()) {" + System.lineSeparator()+
-        "                return ResponseEntity.ok(opt.get());" + System.lineSeparator()+
-        "            } else {" + System.lineSeparator()+
-        "                return ResponseEntity.notFound().build();" + System.lineSeparator()+
-        "            }" + System.lineSeparator()+
-        "        } catch (ServiceException e) {" + System.lineSeparator()+
-        "            return ResponseEntity.internalServerError().build();" + System.lineSeparator()+
-        "        }" + System.lineSeparator()+
-        "    }" + System.lineSeparator()+
-        System.lineSeparator()+
-        "    @PutMapping(\"/{id}/\")" + System.lineSeparator()+
-        "        public ResponseEntity<" + name + "> update" + name + "(@PathVariable(\"id\") Long id, @RequestBody " + name + " updated" + name + ") {" + System.lineSeparator()+
-        "            try {" + System.lineSeparator()+
-        "                if (updated" + name + ".getId() == null || !updated" + name + ".getId().equals(id)) {" + System.lineSeparator()+
-        "                    return ResponseEntity.badRequest().build();" + System.lineSeparator()+
-        "                }" + System.lineSeparator()+
-        "                Optional<" + name + "> opt = " + name.toLowerCase() + "Service.findById(id);" + System.lineSeparator()+
-        "                if (opt.isPresent()) {" + System.lineSeparator()+
-        "                    opt = " + name.toLowerCase() + "Service.save(updated" + name + ");" + System.lineSeparator()+
-        "                    return ResponseEntity.ok(opt.get());" + System.lineSeparator()+
-        "                } else {" + System.lineSeparator()+
-        "                    return ResponseEntity.notFound().build();" + System.lineSeparator()+
-        "                }" + System.lineSeparator()+
-        "            } catch (ServiceException e) {" + System.lineSeparator()+
-        "                return ResponseEntity.internalServerError().build();" + System.lineSeparator()+
-        "            }" + System.lineSeparator()+
-        "        }" + System.lineSeparator()+
-        System.lineSeparator()+
-        System.lineSeparator()+
-        "    @PostMapping(\"/\")" + System.lineSeparator()+
-        "    public ResponseEntity<" + name + "> create" + name + "(@RequestBody " + name + " new" + name + ") {" + System.lineSeparator()+
-        "        try {" + System.lineSeparator()+
-        "            if (new" + name + ".getId() != null) {" + System.lineSeparator()+
-        "                return ResponseEntity.badRequest().build();" + System.lineSeparator()+
-        "            }" + System.lineSeparator()+
-        "            " + name + " created" + name + " = " + name.toLowerCase() + "Service.save(new" + name + ");" + System.lineSeparator()+
-        "            return ResponseEntity.status(HttpStatus.CREATED).body(created" + name + ");" + System.lineSeparator()+
-        "        } catch (ServiceException e) {" + System.lineSeparator()+
-        "            return ResponseEntity.internalServerError().build();" + System.lineSeparator()+
-        "        }" + System.lineSeparator()+
-        "    }" + System.lineSeparator()+
-        System.lineSeparator()+
-        "    @DeleteMapping(\"/{id}/\")" + System.lineSeparator()+
-        "    public ResponseEntity<Void> delete" + name + "(@PathVariable(\"id\") Long id) {" + System.lineSeparator()+
-        "        try {" + System.lineSeparator()+
-        "            Optional<" + name + "> opt = " + name.toLowerCase() + "Service.findById(id);" + System.lineSeparator()+
-        "            if (opt.isPresent()) {" + System.lineSeparator()+
-        "                " + name.toLowerCase() + "Service.delete(opt.get());" + System.lineSeparator()+
-        "                return ResponseEntity.noContent().build();" + System.lineSeparator()+
-        "            } else {" + System.lineSeparator()+
-        "                return ResponseEntity.notFound().build();" + System.lineSeparator()+
-        "            }" + System.lineSeparator()+
-        "        } catch (ServiceException e) {" + System.lineSeparator()+
-        "            return ResponseEntity.internalServerError().build();" + System.lineSeparator()+
-        "        }" + System.lineSeparator()+
-        "    }" + System.lineSeparator()+
-        System.lineSeparator()+
-        "}";
+        String src = "package app.model.controllers;" + System.lineSeparator() +
+
+                "import app.model.controllers.dto.*;" + System.lineSeparator() +
+                "import app.model.entities.*;" + System.lineSeparator() +
+                "import app.model.services.*;" + System.lineSeparator() +
+                "import app.model.services.exceptions.ServiceException;" + System.lineSeparator() +
+                "import org.springframework.http.HttpStatus;" + System.lineSeparator() +
+                "import org.springframework.http.ResponseEntity;" + System.lineSeparator() +
+                "import org.springframework.web.bind.annotation.*;" + System.lineSeparator() +
+                "import java.util.Collection;" + System.lineSeparator() +
+                "import java.util.Optional;" + System.lineSeparator() +
+                "import app.model.controllers.dto.assemblers.*;" + System.lineSeparator() +
+
+                "import org.springframework.web.bind.annotation.RestController;" + System.lineSeparator() +
+                System.lineSeparator() +
+                "@RestController" + System.lineSeparator() +
+                "@RequestMapping(\"/api/v1/" + name.toLowerCase() + "s\")" + System.lineSeparator() +
+                "public class " + name + "Controller {" + System.lineSeparator() +
+                System.lineSeparator() +
+                "    private final " + name + "Service " + name.toLowerCase() + "Service;" + System.lineSeparator() +
+                "    private final " + name + "DtoAssembler " + name.toLowerCase() + "DtoAssembler;"
+                + System.lineSeparator() +
+                System.lineSeparator() +
+                "    public " + name + "Controller(" + name + "Service " + name.toLowerCase() + "Service, " + name
+                + "DtoAssembler " + name.toLowerCase() + "DtoAssembler) {"
+                + System.lineSeparator() +
+                "        this." + name.toLowerCase() + "Service = " + name.toLowerCase() + "Service;" +
+                System.lineSeparator() +
+                "        this." + name.toLowerCase() + "DtoAssembler = " + name.toLowerCase() + "DtoAssembler;"
+
+                + System.lineSeparator() +
+                "    }" + System.lineSeparator() +
+                System.lineSeparator() +
+                "    @GetMapping(\"/\")" + System.lineSeparator() +
+                "    public ResponseEntity<Collection<" + name + "Dto>> getAll() {" + System.lineSeparator() +
+                "        try {" + System.lineSeparator() +
+                "            Collection<" + name + "Dto> dtos = " + name.toLowerCase()
+                + "DtoAssembler.toDtoList((Collection<" + name + ">)" + name.toLowerCase() + "Service.findAll());"
+                + System.lineSeparator() +
+                "            return ResponseEntity.ok(dtos);" + System.lineSeparator()
+                + System.lineSeparator() +
+                "        } catch (ServiceException e) {" + System.lineSeparator() +
+                "            return ResponseEntity.internalServerError().build();" + System.lineSeparator() +
+                "        }" + System.lineSeparator() +
+                "    }" + System.lineSeparator() +
+                System.lineSeparator() +
+
+                "    @GetMapping(\"/count/\")" + System.lineSeparator() +
+                "    public ResponseEntity<Long> count() {" + System.lineSeparator() +
+                "        try {" + System.lineSeparator() +
+                "            return ResponseEntity.ok(" + name.toLowerCase() + "Service.count());"
+                + System.lineSeparator() +
+                "        } catch (ServiceException e) {" + System.lineSeparator() +
+                "            return ResponseEntity.internalServerError().build();" + System.lineSeparator() +
+                "        }" + System.lineSeparator() +
+                "    }" + System.lineSeparator() +
+                System.lineSeparator() +
+
+                "    @GetMapping(\"/{id}/\")" + System.lineSeparator() +
+                "    public ResponseEntity<" + name + "Dto> get" + name + "(@PathVariable(\"id\") Long id) {"
+                + System.lineSeparator() +
+                "        try {" + System.lineSeparator() +
+                "            Optional<" + name + "> opt = " + name.toLowerCase() + "Service.findById(id);"
+                + System.lineSeparator() +
+                "            if (opt.isPresent()) {" + System.lineSeparator() +
+
+                "                return ResponseEntity.ok(" + name.toLowerCase() + "DtoAssembler.toDto(opt.get()));"
+                + System.lineSeparator() +
+                "            } else {" + System.lineSeparator() +
+                "                return ResponseEntity.notFound().build();" + System.lineSeparator() +
+                "            }" + System.lineSeparator() +
+                "        } catch (ServiceException e) {" + System.lineSeparator() +
+                "            return ResponseEntity.internalServerError().build();" + System.lineSeparator() +
+                "        }" + System.lineSeparator() +
+                "    }" + System.lineSeparator() +
+
+                System.lineSeparator() +
+                "    @PutMapping(\"/{id}/\")" + System.lineSeparator() +
+                "    public ResponseEntity<" + name + "> update" + name
+                + "(@PathVariable(\"id\") Long id, @RequestBody " + name + " updated" + name + ") {"
+                + System.lineSeparator() +
+                "        try {" + System.lineSeparator() +
+                "            if (updated" + name + ".getId() == null || !updated" + name + ".getId().equals(id)) {"
+                + System.lineSeparator() +
+                "                return ResponseEntity.badRequest().build();" + System.lineSeparator() +
+                "            }" + System.lineSeparator() +
+                "            Optional<" + name + "> opt = " + name.toLowerCase() + "Service.findById(id);"
+                + System.lineSeparator() +
+                "            if (opt.isPresent()) {" + System.lineSeparator() +
+                "                opt = Optional.ofNullable(" + name.toLowerCase() + "Service.save(updated" + name
+                + "));"
+                + System.lineSeparator() +
+                "                return ResponseEntity.ok(opt.get());" + System.lineSeparator() +
+                "            } else {" + System.lineSeparator() +
+                "                return ResponseEntity.notFound().build();" + System.lineSeparator() +
+                "            }" + System.lineSeparator() +
+                "        } catch (ServiceException e) {" + System.lineSeparator() +
+                "            return ResponseEntity.internalServerError().build();" + System.lineSeparator() +
+                "        }" + System.lineSeparator() +
+                "    }" + System.lineSeparator() +
+                System.lineSeparator() + System.lineSeparator() +
+
+                "    @PostMapping(\"/\")" + System.lineSeparator() +
+                "    public ResponseEntity<" + name + "Dto> create" + name + "(@RequestBody " + name + "Dto new" + name
+                + ") {" + System.lineSeparator() +
+                "        try {" + System.lineSeparator() +
+                "            if (new" + name + ".getId() != null) {" + System.lineSeparator() +
+                "                return ResponseEntity.badRequest().build();" + System.lineSeparator() +
+                "            }" + System.lineSeparator() +
+                "            " + name + " created" + name + " = " + name.toLowerCase() + "Service.save("
+                + name.toLowerCase() + "DtoAssembler.fromDto(" + name.toLowerCase() + "Dto));" + System.lineSeparator()
+                + "new" + name + " = " + name.toLowerCase() + "DtoAssembler.toDto(created" + name + ");"+
+                "            return ResponseEntity.status(HttpStatus.CREATED).body(new" + name + ");"
+                + System.lineSeparator() +
+                "        } catch (ServiceException e | ValidException e) {" + System.lineSeparator() +
+                "            return ResponseEntity.internalServerError().build();" + System.lineSeparator() +
+                "        }" + System.lineSeparator() +
+                "    }" + System.lineSeparator() +
+                System.lineSeparator() +
+                "    @DeleteMapping(\"/{id}/\")" + System.lineSeparator() +
+                "    public ResponseEntity<Void> delete" + name + "(@PathVariable(\"id\") Long id) {"
+                + System.lineSeparator() +
+                "        try {" + System.lineSeparator() +
+                "            Optional<" + name + "> opt = " + name.toLowerCase() + "Service.findById(id);"
+                + System.lineSeparator() +
+                "            if (opt.isPresent()) {" + System.lineSeparator() +
+                "                " + name.toLowerCase() + "Service.delete(opt.get());" + System.lineSeparator() +
+                "                return ResponseEntity.noContent().build();" + System.lineSeparator() +
+                "            } else {" + System.lineSeparator() +
+                "                return ResponseEntity.notFound().build();" + System.lineSeparator() +
+                "            }" + System.lineSeparator() +
+                "        } catch (ServiceException e) {" + System.lineSeparator() +
+                "            return ResponseEntity.internalServerError().build();" + System.lineSeparator() +
+                "        }" + System.lineSeparator() +
+                "    }" + System.lineSeparator() +
+                System.lineSeparator() +
+                "}";
         Files.write(controllersDir.resolve(name + "Controller.java"), src.getBytes(StandardCharsets.UTF_8));
         showInfo("Controller généré: " + name + "Controller");
     }
 
-    public static void generateDto(String name, Path dtoDir) throws IOException {
-        String src = "package app.model.dto;" + System.lineSeparator() +
-                "import lombok.Data;" + System.lineSeparator() +
-                "import java.time.LocalDate;" + System.lineSeparator() +
-                System.lineSeparator() +
-                "@Data" + System.lineSeparator() +
-                "public class " + name + "Dto {" + System.lineSeparator() +
-                "    private Long id;" + System.lineSeparator() +
-                "    private String name;" + System.lineSeparator() +
-                "    private LocalDate createdAt;" + System.lineSeparator() +
-                "}";
-        Files.write(dtoDir.resolve(name + "Dto.java"), src.getBytes(StandardCharsets.UTF_8));
-        showInfo("DTO généré: " + name + "Dto");
+    public static void generateDto(String name, Path dtoPath, List<String> lines, int idxStart) throws IOException {
+        String nl = System.lineSeparator();
+        StringBuilder sb = new StringBuilder();
 
+        sb.append("package app.model.controllers.dto;").append(nl).append(nl)
+                .append("import lombok.*;").append(nl)
+                .append("import java.time.LocalDate;").append(nl)
+                .append("import java.util.*;").append(nl)
+                .append("import app.model.entities.enums.*;").append(nl)
+                .append("import app.model.entities.*;").append(nl)
+                .append("import jakarta.validation.constraints.*;").append(nl).append(nl)
+                .append("@Getter").append(nl)
+                .append("@Builder").append(nl)
+                .append("public class ").append(name).append("Dto {").append(nl).append(nl);
+
+        // Parcours des attributs de l'entité
+        int j = idxStart + 1;
+        Pattern genericPattern = Pattern.compile("<(.+?)>");
+        while (j < lines.size() && lines.get(j).trim().startsWith("-")) {
+            String raw = lines.get(j).trim().substring(1).trim();
+            boolean required = raw.contains("*");
+            if (required)
+                raw = raw.replace("*", "").trim();
+
+            String[] parts = raw.split("\\s+");
+            if (parts.length < 2) {
+                j++;
+                continue;
+            }
+            String type = parts[0];
+            String var = parts[1];
+
+            // // Pour DTO, on ne met pas les annotations JPA, mais on peut garder les
+            // validations
+            // if ("String".equals(type)) {
+            // sb.append(" @NotBlank(message = \"Ne peut pas etre vide\")").append(nl);
+            // } else if
+            // (type.matches("(?:byte|short|int|long|float|double|Byte|Short|Integer|Long|Float|Double)"))
+            // {
+            // // Optionnel: ajouter @NotNull pour les types primitifs si required
+            // if (required)
+            // sb.append(" @NotNull(message = \"Ce champ ne peut pas etre
+            // null\")").append(nl);
+            // } else if (required) {
+            // sb.append(" @NotNull(message = \"Ce champ ne peut pas etre
+            // null\")").append(nl);
+            // }
+
+            sb.append("    private ").append(type).append(" ").append(var).append(";").append(nl);
+            j++;
+        }
+
+        sb.append("}").append(nl);
+
+        Files.createDirectories(dtoPath);
+        Files.write(dtoPath.resolve(name + "Dto.java"), sb.toString().getBytes(StandardCharsets.UTF_8));
+        showInfo("DTO généré: " + name + "Dto");
+    }
+
+    // Génère un assembler simple pour convertir entre Entity et Dto
+    public static void generateAssemblers(String name, Path assemblersPath, List<String> lines, int idxStart)
+            throws IOException {
+        String nl = System.lineSeparator();
+        StringBuilder sb = new StringBuilder();
+
+        String entityClass = name;
+        String dtoClass = name + "Dto";
+        String assemblerClass = name + "DtoAssembler";
+
+        sb.append("package app.model.controllers.dto.assemblers;").append(nl).append(nl)
+                .append("import app.model.entities.*;").append(nl)
+                .append("import app.model.controllers.dto.").append(dtoClass).append(";").append(nl)
+                .append("import app.model.entities.common.ValidException;").append(nl).append(nl)
+                .append("import java.util.*;").append(nl).append(nl)
+                .append("import java.util.stream.Collectors;").append(nl)
+                .append("import org.springframework.stereotype.Component;").append(nl).append(nl)
+                .append("@Component").append(nl)
+                .append("public class ").append(assemblerClass).append(" {").append(nl).append(nl)
+                .append("    public ").append(dtoClass).append(" toDto(").append(entityClass).append(" entity) {")
+                .append(nl)
+                .append("        if (entity == null) return null;").append(nl)
+                .append("        return ").append(dtoClass).append(".builder()").append(nl);
+
+        // Parcours des attributs pour le mapping
+        int j = idxStart + 1;
+        while (j < lines.size() && lines.get(j).trim().startsWith("-")) {
+            String raw = lines.get(j).trim().substring(1).trim();
+            if (raw.contains("*"))
+                raw = raw.replace("*", "").trim();
+            String[] parts = raw.split("\\s+");
+            if (parts.length < 2) {
+                j++;
+                continue;
+            }
+            String var = parts[1];
+            sb.append("            .").append(var).append("(entity.get").append(Character.toUpperCase(var.charAt(0)))
+                    .append(var.substring(1)).append("())").append(nl);
+            j++;
+        }
+        sb.append("            .build();").append(nl)
+                .append("    }").append(nl).append(nl);
+
+        // Méthode fromDto
+        sb.append("    public ").append(entityClass).append(" fromDto(").append(dtoClass)
+                .append(" dto) throws ValidException {").append(nl)
+                .append("        if (dto == null) return null;").append(nl)
+                .append("        ").append(entityClass).append(" entity = EntityFactory.create").append(entityClass)
+                .append("(");
+
+        j = idxStart + 1;
+        while (j < lines.size() && lines.get(j).trim().startsWith("-")) {
+            String raw = lines.get(j).trim().substring(1).trim();
+            if (raw.contains("*"))
+                raw = raw.replace("*", "").trim();
+            String[] parts = raw.split("\\s+");
+            if (parts.length < 2) {
+                j++;
+                continue;
+            }
+            String var = parts[1];
+            sb.append("dto.get").append(Character.toUpperCase(var.charAt(0))).append(var.substring(1)).append("(),");
+            j++;
+        }
+        if (sb.charAt(sb.length() - 1) == ',') {
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        sb.append(");").append(nl);
+
+        sb.append("        return entity;").append(nl)
+                .append("    }").append(nl).append(nl);
+
+        sb.append("    public Collection<").append(dtoClass).append("> toDtoList(final Collection<").append(entityClass)
+                .append("> entities) {").append(nl)
+                .append("        return entities.stream().map(this::toDto).collect(Collectors.toList());").append(nl)
+                .append("    }").append(nl).append(nl);
+
+        sb.append("}").append(nl);
+
+        Files.createDirectories(assemblersPath);
+        Files.write(assemblersPath.resolve(assemblerClass + ".java"), sb.toString().getBytes(StandardCharsets.UTF_8));
+        showInfo("Assembler généré: " + assemblerClass);
     }
 }

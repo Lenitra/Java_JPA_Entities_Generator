@@ -59,6 +59,15 @@ public abstract class AbstractService<T, R extends JpaRepository<T, ID>, ID> imp
     }
 
     @Override
+    public void delete(T entity) throws ServiceException {
+        try {
+            repository.delete(entity);
+        } catch (Exception e) {
+            throw new ServiceException(e.getMessage(), e);
+        }
+    }
+
+    @Override
     public Long count() throws ServiceException {
         try {
             return repository.count();

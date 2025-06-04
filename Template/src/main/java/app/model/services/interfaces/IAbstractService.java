@@ -19,5 +19,7 @@ public interface IAbstractService<T, ID> {
 
     void deleteById(ID id) throws ServiceException;
 
+    void delete(T entity) throws ServiceException;
+
     Long count() throws ServiceException;
 }

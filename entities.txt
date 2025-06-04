@@ -1,6 +1,6 @@
 c:Product
 - Long id *
-- String name * -130
+- String name * +130
 - double price -0
 -int stockQuantity -0
 
@@ -13,5 +13,5 @@ c:OrderItem
 - Long id *
 - Order order .nn
 - Product product .nn
-- int quantity +0
-- double unitPrice +0
+- int quantity -0
+- double unitPrice -0
