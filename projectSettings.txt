@@ -1,2 +1,2 @@
 database_name=order_products
-intelij_project_path=D:\Utilisateurs\thomas.lemartinel\Desktop\WebJava\OrderProducts
+intelij_project_path=d:\Utilisateurs\thomas.lemartinel\Desktop\test-spring-po84

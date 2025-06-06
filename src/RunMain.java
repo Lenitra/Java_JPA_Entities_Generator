@@ -780,6 +780,7 @@ public class RunMain {
                 "import org.springframework.http.HttpStatus;" + System.lineSeparator() +
                 "import org.springframework.http.ResponseEntity;" + System.lineSeparator() +
                 "import org.springframework.web.bind.annotation.*;" + System.lineSeparator() +
+                "import app.model.entities.common.ValidException;" + System.lineSeparator() +
                 "import java.util.Collection;" + System.lineSeparator() +
                 "import java.util.Optional;" + System.lineSeparator() +
                 "import app.model.controllers.dto.assemblers.*;" + System.lineSeparator() +
@@ -787,6 +788,7 @@ public class RunMain {
                 "import org.springframework.web.bind.annotation.RestController;" + System.lineSeparator() +
                 System.lineSeparator() +
                 "@RestController" + System.lineSeparator() +
+                "@CrossOrigin(origins=\"*\")" + System.lineSeparator() +
                 "@RequestMapping(\"/api/v1/" + name.toLowerCase() + "s\")" + System.lineSeparator() +
                 "public class " + name + "Controller {" + System.lineSeparator() +
                 System.lineSeparator() +
@@ -849,29 +851,37 @@ public class RunMain {
 
                 System.lineSeparator() +
                 "    @PutMapping(\"/{id}/\")" + System.lineSeparator() +
-                "    public ResponseEntity<" + name + "> update" + name
-                + "(@PathVariable(\"id\") Long id, @RequestBody " + name + " updated" + name + ") {"
+                "    public ResponseEntity<" + name + "Dto> update" + name
+                + "(@PathVariable(\"id\") Long id, @RequestBody " + name + "Dto " + name.toLowerCase() + "Dto) {"
                 + System.lineSeparator() +
                 "        try {" + System.lineSeparator() +
-                "            if (updated" + name + ".getId() == null || !updated" + name + ".getId().equals(id)) {"
+                "            if (" + name.toLowerCase() + "Dto.getId() == null || !" + name.toLowerCase()
+                + "Dto.getId().equals(id)) {"
                 + System.lineSeparator() +
                 "                return ResponseEntity.badRequest().build();" + System.lineSeparator() +
                 "            }" + System.lineSeparator() +
                 "            Optional<" + name + "> opt = " + name.toLowerCase() + "Service.findById(id);"
                 + System.lineSeparator() +
                 "            if (opt.isPresent()) {" + System.lineSeparator() +
-                "                opt = Optional.ofNullable(" + name.toLowerCase() + "Service.save(updated" + name
-                + "));"
+                "                " + name + " updated" + name + " = " + name.toLowerCase() + "Service.save("
+                + name.toLowerCase() + "DtoAssembler.toEntity(" + name.toLowerCase() + "Dto));"
                 + System.lineSeparator() +
-                "                return ResponseEntity.ok(opt.get());" + System.lineSeparator() +
+                "                " + name.toLowerCase() + "Dto = " + name.toLowerCase() + "DtoAssembler.toDto(updated"
+                + name + ");"
+                + System.lineSeparator() +
+                "                return ResponseEntity.ok(" + name.toLowerCase() + "Dto);" + System.lineSeparator() +
                 "            } else {" + System.lineSeparator() +
                 "                return ResponseEntity.notFound().build();" + System.lineSeparator() +
                 "            }" + System.lineSeparator() +
                 "        } catch (ServiceException e) {" + System.lineSeparator() +
                 "            return ResponseEntity.internalServerError().build();" + System.lineSeparator() +
                 "        }" + System.lineSeparator() +
+                "        catch (ValidException e) {\r\n" + //
+                "            throw new RuntimeException(e);\r\n" + //
+                "        }" + System.lineSeparator() +
                 "    }" + System.lineSeparator() +
                 System.lineSeparator() + System.lineSeparator() +
+
 
                 "    @PostMapping(\"/\")" + System.lineSeparator() +
                 "    public ResponseEntity<" + name + "Dto> create" + name + "(@RequestBody " + name + "Dto new" + name
@@ -881,14 +891,17 @@ public class RunMain {
                 "                return ResponseEntity.badRequest().build();" + System.lineSeparator() +
                 "            }" + System.lineSeparator() +
                 "            " + name + " created" + name + " = " + name.toLowerCase() + "Service.save("
-                + name.toLowerCase() + "DtoAssembler.fromDto(" + name.toLowerCase() + "Dto));" + System.lineSeparator()
-                + "new" + name + " = " + name.toLowerCase() + "DtoAssembler.toDto(created" + name + ");"+
+                + name.toLowerCase() + "DtoAssembler.toEntity(new" + name + "));" + System.lineSeparator()
+                + "            new" + name + " = " + name.toLowerCase() + "DtoAssembler.toDto(created" + name + ");"
+                + System.lineSeparator() +
                 "            return ResponseEntity.status(HttpStatus.CREATED).body(new" + name + ");"
                 + System.lineSeparator() +
-                "        } catch (ServiceException e | ValidException e) {" + System.lineSeparator() +
+                "        } catch (ServiceException | ValidException e) {" + System.lineSeparator() +
                 "            return ResponseEntity.internalServerError().build();" + System.lineSeparator() +
                 "        }" + System.lineSeparator() +
                 "    }" + System.lineSeparator() +
+
+
                 System.lineSeparator() +
                 "    @DeleteMapping(\"/{id}/\")" + System.lineSeparator() +
                 "    public ResponseEntity<Void> delete" + name + "(@PathVariable(\"id\") Long id) {"
@@ -1014,8 +1027,8 @@ public class RunMain {
         sb.append("            .build();").append(nl)
                 .append("    }").append(nl).append(nl);
 
-        // Méthode fromDto
-        sb.append("    public ").append(entityClass).append(" fromDto(").append(dtoClass)
+        // Méthode toEntity
+        sb.append("    public ").append(entityClass).append(" toEntity(").append(dtoClass)
                 .append(" dto) throws ValidException {").append(nl)
                 .append("        if (dto == null) return null;").append(nl)
                 .append("        ").append(entityClass).append(" entity = EntityFactory.create").append(entityClass)
