@@ -882,7 +882,6 @@ public class RunMain {
                 "    }" + System.lineSeparator() +
                 System.lineSeparator() + System.lineSeparator() +
 
-
                 "    @PostMapping(\"/\")" + System.lineSeparator() +
                 "    public ResponseEntity<" + name + "Dto> create" + name + "(@RequestBody " + name + "Dto new" + name
                 + ") {" + System.lineSeparator() +
@@ -900,7 +899,6 @@ public class RunMain {
                 "            return ResponseEntity.internalServerError().build();" + System.lineSeparator() +
                 "        }" + System.lineSeparator() +
                 "    }" + System.lineSeparator() +
-
 
                 System.lineSeparator() +
                 "    @DeleteMapping(\"/{id}/\")" + System.lineSeparator() +
@@ -1031,7 +1029,7 @@ public class RunMain {
         sb.append("    public ").append(entityClass).append(" toEntity(").append(dtoClass)
                 .append(" dto) throws ValidException {").append(nl)
                 .append("        if (dto == null) return null;").append(nl)
-                .append("        ").append(entityClass).append(" entity = EntityFactory.create").append(entityClass)
+                .append("       ").append(" return EntityFactory.create").append(entityClass)
                 .append("(");
 
         j = idxStart + 1;
@@ -1053,8 +1051,7 @@ public class RunMain {
         }
         sb.append(");").append(nl);
 
-        sb.append("        return entity;").append(nl)
-                .append("    }").append(nl).append(nl);
+        sb.append("    }").append(nl).append(nl);
 
         sb.append("    public Collection<").append(dtoClass).append("> toDtoList(final Collection<").append(entityClass)
                 .append("> entities) {").append(nl)
