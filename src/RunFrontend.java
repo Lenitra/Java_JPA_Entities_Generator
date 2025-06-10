@@ -43,6 +43,7 @@ public class RunFrontend {
             deleteNoneFiles(tmpDir);
 
             applyProjectSettings(cwd.resolve("projectSettings.txt"), tmpDir);
+            setupRouter(lines, 0);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -53,34 +54,6 @@ public class RunFrontend {
         while (j < lines.size() && lines.get(j).trim().startsWith("-"))
             j++;
         return j - 1;
-    }
-
-    private static void deleteNoneFiles(Path start) throws IOException {
-        Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (file.getFileName().toString().equalsIgnoreCase("none"))
-                    Files.delete(file);
-                return FileVisitResult.CONTINUE;
-            }
-        });
-        showInfo("Fichiers 'none' supprimés");
-    }
-
-    private static void copyDirectory(Path source, Path target) throws IOException {
-        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                Files.createDirectories(target.resolve(source.relativize(dir)));
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Files.copy(file, target.resolve(source.relativize(file)), StandardCopyOption.REPLACE_EXISTING);
-                return FileVisitResult.CONTINUE;
-            }
-        });
     }
 
     private static void applyProjectSettings(Path settingsFile, Path tmpDir) throws IOException {
@@ -111,6 +84,34 @@ public class RunFrontend {
             showWarn("Clé 'project_path' non trouvée");
 
         showInfo("projectSettings appliqués");
+    }
+
+    private static void copyDirectory(Path source, Path target) throws IOException {
+        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                Files.createDirectories(target.resolve(source.relativize(dir)));
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.copy(file, target.resolve(source.relativize(file)), StandardCopyOption.REPLACE_EXISTING);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
+    private static void deleteNoneFiles(Path start) throws IOException {
+        Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if (file.getFileName().toString().equalsIgnoreCase("none"))
+                    Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+        showInfo("Fichiers 'none' supprimés");
     }
 
     private static void generateEntity(String name, List<String> lines, int idxStart, Path entityDir)
@@ -189,7 +190,6 @@ public class RunFrontend {
                 if (maxVal != null)
                     fieldLines.set(fieldLines.size() - 1, fieldLines.get(fieldLines.size() - 1) + ", max: " + maxVal);
 
-
                 fieldLines.set(fieldLines.size() - 1, fieldLines.get(fieldLines.size() - 1) + "},");
             } else if (type.equals("Boolean") || type.equals("boolean")) {
                 fieldLines.add("        {name: '" + col + "', type: 'checkbox', label: '" + var + "'},");
@@ -220,17 +220,15 @@ public class RunFrontend {
         System.out.println("[INFO] " + msg);
     }
 
-    private static void showWarn(String msg) {
-        System.out.println(
-                "******************************************************* WARNING *******************************************************");
-        System.out.println("[WARN] " + msg + "\n");
-    }
-
     private static void showError(String msg) {
         System.err.println(
                 "******************************************************* ERROR *******************************************************");
         System.err.println("[ERROR] " + msg + "\n");
 
+    }
+
+    private static void showWarn(String msg) {
+        System.out.println("[WARN] " + msg);
     }
 
     private static void deleteDirectory(Path start) throws IOException {
@@ -249,6 +247,48 @@ public class RunFrontend {
                 return FileVisitResult.CONTINUE;
             }
         });
+    }
+
+    private static void setupRouter(List<String> lines, int idxStart) throws IOException {
+        Path cwd = Paths.get(".").toAbsolutePath().normalize();
+        Path entitiesFile = cwd.resolve("entities.txt");
+        Path routerFile = cwd.resolve("tmp/frontend/src/router/index.js");
+
+        List<String> entityLines = Files.readAllLines(entitiesFile, StandardCharsets.UTF_8);
+        List<String> entities = new ArrayList<>();
+        for (String line : entityLines) {
+            if (line.trim().startsWith("c:")) {
+                String name = line.trim().substring(2).trim();
+                entities.add(name);
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("import { createRouter, createWebHistory } from 'vue-router'\n");
+        sb.append("import ProductCRUD from '@/views/ProductCRUD.vue'\n");
+        for (String entity : entities) {
+            if (!entity.equals("Product")) {
+                sb.append("import ").append(entity).append("CRUD from '@/views/").append(entity).append("CRUD.vue'\n");
+            }
+        }
+        sb.append("\nconst routes = [\n");
+        sb.append("    { path: '/', redirect: '/products' },\n");
+        sb.append("    { path: '/products', component: ProductCRUD },\n");
+        for (String entity : entities) {
+            if (!entity.equals("Product")) {
+                sb.append("    { path: '/").append(entity.toLowerCase()).append("s', component: ").append(entity)
+                        .append("CRUD },\n");
+            }
+        }
+        sb.append("]\n\n");
+        sb.append("const router = createRouter({\n");
+        sb.append("    history: createWebHistory(),\n");
+        sb.append("    routes\n");
+        sb.append("})\n\n");
+        sb.append("export default router\n");
+
+        Files.write(routerFile, sb.toString().getBytes(StandardCharsets.UTF_8));
+        showInfo("Fichier router/index.js généré avec toutes les entités");
     }
 
 }
