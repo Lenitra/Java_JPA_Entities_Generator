@@ -12,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class RunMain {
+public class RunBackend {
 
     public static void main(String[] args) {
         showInfo("Démarrage de la génération de code");
@@ -20,11 +20,11 @@ public class RunMain {
             Path cwd = Paths.get(".").toAbsolutePath().normalize();
 
             // Répertoire temporaire
-            Path tmpDir = cwd.resolve("tmp");
+            Path tmpDir = cwd.resolve("tmp/backend");
             deleteDirectory(tmpDir);
 
             // Copie du template
-            Path templateDir = cwd.resolve("Template");
+            Path templateDir = cwd.resolve("Template/Backend");
             if (!Files.isDirectory(templateDir)) {
                 showError("Dossier 'Template' introuvable");
                 System.exit(1);
@@ -691,18 +691,18 @@ public class RunMain {
         else
             showWarn("Clé 'database_name' non trouvée");
 
-        String ideKey = "intelij_project_path";
+        String ideKey = "project_path";
         if (configs.containsKey(ideKey) && !configs.get(ideKey).isEmpty()) {
-            Path idePath = Paths.get(configs.get(ideKey));
+            Path idePath = Paths.get(configs.get(ideKey) + "/backend");
             if (!idePath.isAbsolute()) {
-                showError("intellij_project_path doit etre un chemin absolu");
+                showError("project_path doit etre un chemin absolu");
                 return;
             }
             copyDirectory(tmpDir, idePath);
         } else if (configs.containsKey(ideKey))
-            showWarn("intellij_project_path vide, le template genere se trouve dans /tmp");
+            showWarn("project_path vide, le template genere se trouve dans /tmp");
         else
-            showWarn("Clé 'intellij_project_path' non trouvée");
+            showWarn("Clé 'project_path' non trouvée");
 
         showInfo("projectSettings appliqués");
     }

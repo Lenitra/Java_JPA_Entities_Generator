@@ -55,8 +55,8 @@ if not exist "%BIN_DIR%" (
 )
 
 
-echo [4/5] Compilation de src/RunMain.java...
-"%JAVAC_EXEC%" -d "%BIN_DIR%" src/RunMain.java
+echo [4/5] Compilation de src/RunFrontend.java...
+"%JAVAC_EXEC%" -d "%BIN_DIR%" src/RunFrontend.java
 if errorlevel 1 (
     echo Échec de la compilation. Vérifiez votre code source.
     pause
@@ -66,6 +66,6 @@ if errorlevel 1 (
 )
 
 
-echo [5/5] Exécution de la classe src/RunMain...
-"%JAVA_EXEC%" -XX:+ShowCodeDetailsInExceptionMessages -cp "%BIN_DIR%" RunMain
+echo [5/5] Exécution de la classe src/RunFrontend...
+"%JAVA_EXEC%" -XX:+ShowCodeDetailsInExceptionMessages -cp "%BIN_DIR%" RunFrontend
 echo Exécution terminée.
