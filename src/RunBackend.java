@@ -48,7 +48,6 @@ public class RunBackend {
             Files.createDirectories(daoDir);
             Files.createDirectories(servicesDir);
             Files.createDirectories(interfacesDir);
-            Files.createDirectories(commandsDir);
 
             // Lecture de entities.txt
             Path entitiesFile = cwd.resolve("entities.txt");
@@ -69,7 +68,6 @@ public class RunBackend {
                     generateDao(name, daoDir);
                     generateServiceInterface(name, interfacesDir);
                     generateServiceImplementation(name, servicesDir);
-                    // generateCommands(name, commandsDir);
                     generateControllers(name, controllersDir);
                     i = skipAttributes(lines, i);
                 } else if (raw.startsWith("e:")) {
@@ -937,6 +935,7 @@ public class RunBackend {
                 .append("@Getter").append(nl)
                 .append("@Builder").append(nl)
                 .append("public class ").append(name).append("Dto {").append(nl).append(nl);
+        sb.append("    private Long id;").append(nl);
 
         // Parcours des attributs de l'entité
         int j = idxStart + 1;
@@ -954,28 +953,11 @@ public class RunBackend {
             }
             String type = parts[0];
             String var = parts[1];
-
-            // // Pour DTO, on ne met pas les annotations JPA, mais on peut garder les
-            // validations
-            // if ("String".equals(type)) {
-            // sb.append(" @NotBlank(message = \"Ne peut pas etre vide\")").append(nl);
-            // } else if
-            // (type.matches("(?:byte|short|int|long|float|double|Byte|Short|Integer|Long|Float|Double)"))
-            // {
-            // // Optionnel: ajouter @NotNull pour les types primitifs si required
-            // if (required)
-            // sb.append(" @NotNull(message = \"Ce champ ne peut pas etre
-            // null\")").append(nl);
-            // } else if (required) {
-            // sb.append(" @NotNull(message = \"Ce champ ne peut pas etre
-            // null\")").append(nl);
-            // }
-
             sb.append("    private ").append(type).append(" ").append(var).append(";").append(nl);
             j++;
         }
 
-        sb.append("}").append(nl);
+        sb.append("}").append(nl).append(nl);
 
         Files.createDirectories(dtoPath);
         Files.write(dtoPath.resolve(name + "Dto.java"), sb.toString().getBytes(StandardCharsets.UTF_8));

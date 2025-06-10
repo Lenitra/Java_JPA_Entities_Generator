@@ -1,2 +1,2 @@
-database_name=order_products
+database_name=dinosql
 project_path=d:\Utilisateurs\thomas.lemartinel\Desktop\TEST

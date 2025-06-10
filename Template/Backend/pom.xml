@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>net.etnc</groupId>
-    <artifactId>test-spring-po84</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>test-spring-po84</name>
-    <description>test-spring-po84</description>
+    <artifactId>Application</artifactId>
+    <version>0.0.1</version>
+    <name>Application</name>
+    <description>Application</description>
     <url/>
     <licenses>
         <license/>
