@@ -28,24 +28,28 @@
     </form>
 
     <!-- Tableau générique -->
+     
+    <div style="margin-bottom: 10px; text-align: right;">
+      Taille du tableau : {{ itemsCount }}
+    </div>
     <table>
       <thead>
       <tr>
-        <th v-for="field in props.entityConfig.fields" :key="field.name">
-          {{ field.label }}
-        </th>
-        <th>Actions</th>
+      <th v-for="field in props.entityConfig.fields" :key="field.name">
+        {{ field.label }}
+      </th>
+      <th>Actions</th>
       </tr>
       </thead>
       <tbody>
       <tr v-for="item in items" :key="item.id">
-        <td v-for="field in props.entityConfig.fields" :key="field.name">
-          {{ formatValue(item[field.name], field) }}
-        </td>
-        <td>
-          <button @click="onEdit(item)">✏️</button>
-          <button @click="onDelete(item.id)">🗑️</button>
-        </td>
+      <td v-for="field in props.entityConfig.fields" :key="field.name">
+        {{ formatValue(item[field.name], field) }}
+      </td>
+      <td>
+        <button @click="onEdit(item)">✏️</button>
+        <button @click="onDelete(item.id)">🗑️</button>
+      </td>
       </tr>
       </tbody>
     </table>
