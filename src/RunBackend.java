@@ -1002,8 +1002,8 @@ public class RunBackend {
                 .append("    public ").append(dtoClass).append(" toDto(").append(entityClass).append(" entity) {")
                 .append(nl)
                 .append("        if (entity == null) return null;").append(nl)
-                .append("        return ").append(dtoClass).append(".builder()").append(nl);
-
+                .append("        return ").append(dtoClass).append(".builder()").append(nl)
+                .append("            .id(entity.getId())").append(nl);
         // Parcours des attributs pour le mapping
         int j = idxStart + 1;
         while (j < lines.size() && lines.get(j).trim().startsWith("-")) {

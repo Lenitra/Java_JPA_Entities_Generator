@@ -179,8 +179,6 @@ public class RunFrontend {
             String nullable = required ? ", nullable=false" : "";
             Matcher m = genericPattern.matcher(type);
 
-            // Champ simple non-relationnel
-            // 2. Bean Validation pour types simples
             if ("String".equals(type)) {
                 fieldLines.add("        {name: '" + col + "', type: 'text', label: '" + var + "'},");
 
