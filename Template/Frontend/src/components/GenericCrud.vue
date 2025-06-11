@@ -28,10 +28,6 @@
     </form>
 
     <!-- Tableau générique -->
-     
-    <div style="margin-bottom: 10px; text-align: right;">
-      Taille du tableau : {{ itemsCount }}
-    </div>
     <table>
       <thead>
       <tr>

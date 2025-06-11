@@ -206,7 +206,10 @@ public class RunBackend {
         Pattern camelCaseBoundary = Pattern.compile("([a-z])([A-Z])");
         Pattern genericPattern = Pattern.compile("<(.+?)>");
         String customGetterSetter = "";
-
+        Set<String> enumTypes = lines.stream()
+                .filter(l -> l.trim().startsWith("e:"))
+                .map(l -> l.trim().substring(2).trim())
+                .collect(Collectors.toSet());
         // Types basiques reconnus
         Set<String> basicTypes = Set.of(
                 "String", "byte", "short", "int", "long", "float", "double",
@@ -386,7 +389,8 @@ public class RunBackend {
             }
             // 2. OneToMany unidirectionnel (List<Entité> ou Set<Entité>)
             if ((type.startsWith("List") || type.startsWith("Set")) && m.find()
-                    && !basicTypes.contains(m.group(1).trim())) {
+                    && !basicTypes.contains(m.group(1).trim())
+                    && !enumTypes.contains(m.group(1).trim())) {
                 String elt = m.group(1).trim();
                 if (minVal != null || maxVal != null) {
                     StringBuilder sizeAnn = new StringBuilder("    @Size(");
