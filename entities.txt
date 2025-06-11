@@ -1,6 +1,6 @@
 c:Enclos
 - String nom * 
-- List<Dino> dinos
+- List<Dino> dinos .otm
 
 
 c:Dino
@@ -9,8 +9,9 @@ c:Dino
 - Boolean sexe
 - int taille -0
 - int poids -0
-- Enclos enclos .nn
+- Enclos enclos .mto 
 - TypeDino type
+- List<Soigneur> soigneur .mtm
 
 
 e:TypeDino
@@ -25,4 +26,4 @@ c:Soigneur
 - String nom *
 - String prenom *
 - LocalDate embauche
-- List<TypeDino> typesDino
+- List<TypeDino> typeDino

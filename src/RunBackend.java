@@ -196,23 +196,6 @@ public class RunBackend {
         showInfo("EntityFactory générée");
     }
 
-    /**
-     * Vérifie si le type commence par "List" ou "Set" et si un type générique est
-     * présent.
-     * 
-     * On entre dans cette condition lorsque le type de l'attribut est une
-     * collection
-     * (par exemple, List ou Set) avec un type générique défini (par exemple,
-     * List<Entité> ou Set<Entité>).
-     * Cela permet de gérer les relations OneToMany unidirectionnelles dans une
-     * entité JPA.
-     * 
-     * Exemple :
-     * - Si le type est "List<Entité>", cela signifie qu'il s'agit d'une relation
-     * OneToMany.
-     * - Si le type est "Set<Entité>", cela signifie également une relation
-     * OneToMany, mais sans ordre garanti.
-     */
     private static void generateEntity(String name, List<String> lines, int idxStart, Path entityDir)
             throws IOException {
         String nl = System.lineSeparator();
@@ -236,15 +219,26 @@ public class RunBackend {
             String raw = lines.get(j).trim().substring(1).trim();
             boolean required = raw.contains("*");
             boolean manyToMany = false;
+            boolean manyToOne = false;
+            boolean oneToMany = false;
             boolean notNull = false;
             if (raw.contains("*") || raw.contains(".nn")) {
                 notNull = true;
             }
             if (raw.contains(".mtm")) {
                 manyToMany = true;
+                oneToMany = false;
+                manyToOne = false;
             }
             if (raw.contains(".otm")) {
+                oneToMany = true;
                 manyToMany = false;
+                manyToOne = false;
+            }
+            if (raw.contains(".mto")) {
+                manyToOne = true;
+                manyToMany = false;
+                oneToMany = false;
             }
             if (required)
                 raw = raw.replace("*", "").trim();
@@ -475,6 +469,18 @@ public class RunBackend {
             // Champ simple non-relationnel
             else {
                 fieldLines.add("    @Getter @Setter");
+
+                if (manyToMany) {
+                    fieldLines.add("    @ManyToMany");
+                } else if (oneToMany) {
+                    fieldLines.add("    @OneToMany(fetch = FetchType.LAZY)");
+                } else if (manyToOne) {
+                    fieldLines.add("    @ManyToOne(fetch = FetchType.LAZY)");
+                    fieldLines.add(
+                            "    @JoinColumn(name = \"" + tableName + "_id\", foreignKey = @ForeignKey(name = \"fk_"
+                                    + tableName + "_" + camelCaseBoundary.matcher(var).replaceAll("$1_$2").toLowerCase()
+                                    + "\"))");
+                }
                 // 2. Bean Validation pour types simples
                 if ("String".equals(type)) {
                     if (minVal != null || maxVal != null) {
@@ -498,16 +504,21 @@ public class RunBackend {
                         fieldLines.add("    @Max(value = " + maxVal + ", message=\"La valeur maximale est : " + maxVal
                                 + " \")");
                 }
+
                 if (required || notNull)
                     fieldLines.add("    @NotNull(message = \"Ce champ ne peut pas etre null\")");
 
+                StringBuilder colAnn = new StringBuilder("");
                 // 3. Column avec longueur si applicable
-                StringBuilder colAnn = new StringBuilder("    @Column(name = \"" + col + "\"");
-                if (!type.matches("(?:byte|short|int|long|float|double|Byte|Short|Integer|Long|Float|Double)")
-                        && maxVal != null) {
-                    colAnn.append(", length = ").append(maxVal);
+                if (oneToMany || manyToMany || manyToOne) {
+                } else {
+                    colAnn.append("    @Column(name = \"" + col + "\"");
+                    if (!type.matches("(?:byte|short|int|long|float|double|Byte|Short|Integer|Long|Float|Double)")
+                            && maxVal != null) {
+                        colAnn.append(", length = ").append(maxVal);
+                    }
+                    colAnn.append(nullable).append(")");
                 }
-                colAnn.append(nullable).append(")");
                 fieldLines.add(colAnn.toString());
 
                 // 4. Lombok getters/setters et champ
@@ -953,7 +964,12 @@ public class RunBackend {
             }
             String type = parts[0];
             String var = parts[1];
-            sb.append("    private ").append(type).append(" ").append(var).append(";").append(nl);
+            if (type.startsWith("List") || type.startsWith("Set") || type.startsWith("Collection")
+                    || type.startsWith("Map")) {
+
+            } else {
+                sb.append("    private ").append(type).append(" ").append(var).append(";").append(nl);
+            }
             j++;
         }
 
@@ -1000,8 +1016,14 @@ public class RunBackend {
                 continue;
             }
             String var = parts[1];
-            sb.append("            .").append(var).append("(entity.get").append(Character.toUpperCase(var.charAt(0)))
-                    .append(var.substring(1)).append("())").append(nl);
+            String type = parts[0];
+            if (type.startsWith("List") || type.startsWith("Set") || type.startsWith("Map")
+                    || type.startsWith("Collection") || type.startsWith("Iterable")) {
+            } else {
+                sb.append("            .").append(var).append("(entity.get")
+                        .append(Character.toUpperCase(var.charAt(0)))
+                        .append(var.substring(1)).append("())").append(nl);
+            }
             j++;
         }
         sb.append("            .build();").append(nl)
@@ -1017,6 +1039,7 @@ public class RunBackend {
         j = idxStart + 1;
         while (j < lines.size() && lines.get(j).trim().startsWith("-")) {
             String raw = lines.get(j).trim().substring(1).trim();
+            String typeOfVar = raw.split(" ")[0];
             if (raw.contains("*"))
                 raw = raw.replace("*", "").trim();
             String[] parts = raw.split("\\s+");
@@ -1025,7 +1048,12 @@ public class RunBackend {
                 continue;
             }
             String var = parts[1];
-            sb.append("dto.get").append(Character.toUpperCase(var.charAt(0))).append(var.substring(1)).append("(),");
+            System.out.println("Processing field: " + var + " of type: " + typeOfVar);
+            if (!typeOfVar.startsWith("List") && !typeOfVar.startsWith("Set") && !typeOfVar.startsWith("Map")
+                    && !typeOfVar.startsWith("Collection") && !typeOfVar.startsWith("Iterable")) {
+                sb.append("dto.get").append(Character.toUpperCase(var.charAt(0))).append(var.substring(1))
+                        .append("(),");
+            }
             j++;
         }
         if (sb.charAt(sb.length() - 1) == ',') {
