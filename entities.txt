@@ -1,6 +1,7 @@
 c:Enclos
 - String nom * 
 - List<Dino> dinos .otm
+- List<TypeDino> typeDinos
 
 
 c:Dino
