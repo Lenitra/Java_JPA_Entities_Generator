@@ -19,6 +19,7 @@ public class RunFrontend {
             Path tmpDir = cwd.resolve("tmp/frontend");
             Path entityDir = tmpDir.resolve("src/entities/");
             Path entitiesFile = cwd.resolve("entities.txt");
+            Path pagesPath = tmpDir.resolve("src/views/");
             deleteDirectory(tmpDir);
 
             Path templateDir = cwd.resolve("Template/Frontend");
@@ -39,11 +40,11 @@ public class RunFrontend {
                     i = skipAttributes(lines, i);
                 }
             }
-
+            generationVue(lines, pagesPath);
             deleteNoneFiles(tmpDir);
-
+            generateNavBar(lines, tmpDir.resolve("src/components/"));
+            setupRouter(lines);
             applyProjectSettings(cwd.resolve("projectSettings.txt"), tmpDir);
-            setupRouter(lines, 0);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -249,7 +250,7 @@ public class RunFrontend {
         });
     }
 
-    private static void setupRouter(List<String> lines, int idxStart) throws IOException {
+    private static void setupRouter(List<String> lines) throws IOException {
         Path cwd = Paths.get(".").toAbsolutePath().normalize();
         Path entitiesFile = cwd.resolve("entities.txt");
         Path routerFile = cwd.resolve("tmp/frontend/src/router/index.js");
@@ -265,20 +266,15 @@ public class RunFrontend {
 
         StringBuilder sb = new StringBuilder();
         sb.append("import { createRouter, createWebHistory } from 'vue-router'\n");
-        sb.append("import ProductCRUD from '@/views/ProductCRUD.vue'\n");
         for (String entity : entities) {
-            if (!entity.equals("Product")) {
-                sb.append("import ").append(entity).append("CRUD from '@/views/").append(entity).append("CRUD.vue'\n");
-            }
+            sb.append("import ").append(entity).append("CRUD from '@/views/").append(entity).append("CRUD.vue'\n");
         }
         sb.append("\nconst routes = [\n");
-        sb.append("    { path: '/', redirect: '/products' },\n");
-        sb.append("    { path: '/products', component: ProductCRUD },\n");
+        sb.append("    { path: '/', component: '/home' },\n");
         for (String entity : entities) {
-            if (!entity.equals("Product")) {
-                sb.append("    { path: '/").append(entity.toLowerCase()).append("s', component: ").append(entity)
-                        .append("CRUD },\n");
-            }
+            sb.append("    { path: '/").append(entity.toLowerCase()).append("', component: ").append(entity)
+                    .append("CRUD },\n");
+
         }
         sb.append("]\n\n");
         sb.append("const router = createRouter({\n");
@@ -289,6 +285,102 @@ public class RunFrontend {
 
         Files.write(routerFile, sb.toString().getBytes(StandardCharsets.UTF_8));
         showInfo("Fichier router/index.js généré avec toutes les entités");
+    }
+
+    private static void generationVue(List<String> lines, Path vueDir) {
+        String nl = System.lineSeparator();
+        for (String line : lines) {
+            if (line.trim().startsWith("c:")) {
+                String name = line.trim().substring(2).trim();
+                StringBuilder sb = new StringBuilder();
+
+                sb.append("<template>").append(nl);
+                sb.append("  <GenericCrud").append(nl);
+                sb.append("      :entityConfig=\"").append(name).append("\"").append(nl);
+                sb.append("      title=\"").append(name).append("\"").append(nl);
+                sb.append("  />").append(nl);
+                sb.append("</template>").append(nl).append(nl);
+
+                sb.append("<script setup>").append(nl);
+                sb.append("import GenericCrud from '@/components/GenericCrud.vue'").append(nl);
+                sb.append("import ").append(name)
+                        .append(" from \"@/entities/").append(name).append(".js\";")
+                        .append(nl);
+                sb.append("</script>").append(nl);
+
+                try {
+                    Files.createDirectories(vueDir);
+                    Files.write(
+                            vueDir.resolve(name + "CRUD.vue"),
+                            sb.toString().getBytes(StandardCharsets.UTF_8));
+                    showInfo("Vue CRUD généré pour: " + name);
+                } catch (IOException e) {
+                    showError("Erreur lors de la génération du fichier Vue pour "
+                            + name + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    private static void generateNavBar(List<String> lines, Path vueDir) {
+        String nl = System.lineSeparator();
+        StringBuilder sb = new StringBuilder();
+        sb.append("<template>").append(nl);
+        sb.append("    <nav>").append(nl);
+        sb.append("        <ul>").append(nl);
+
+        for (String line : lines) {
+            if (line.trim().startsWith("c:")) {
+                String name = line.trim().substring(2).trim();
+                sb.append("            <li><router-link to=\"/")
+                        .append(name.toLowerCase())
+                        .append("\">")
+                        .append(name)
+                        .append("</router-link></li>")
+                        .append(nl);
+            }
+        }
+
+        sb.append("        </ul>").append(nl);
+        sb.append("    </nav>").append(nl);
+        sb.append("</template>").append(nl).append(nl);
+
+        sb.append("<style scoped>").append(nl);
+        // Fond clair et texte sombre
+        sb.append("nav {").append(nl);
+        sb.append("  background-color: #f5f5f5;").append(nl);
+        sb.append("  padding: 0.5rem;").append(nl);
+        sb.append("}").append(nl).append(nl);
+        // Liste horizontale simple
+        sb.append("nav ul {").append(nl);
+        sb.append("  display: flex;").append(nl);
+        sb.append("  gap: 1rem;").append(nl);
+        sb.append("  margin: 0; padding: 0;").append(nl);
+        sb.append("  list-style: none;").append(nl);
+        sb.append("}").append(nl).append(nl);
+        // Liens génériques
+        sb.append("nav a {").append(nl);
+        sb.append("  color: #333;").append(nl);
+        sb.append("  text-decoration: none;").append(nl);
+        sb.append("  padding: 0.25rem 0.5rem;").append(nl);
+        sb.append("  border-radius: 3px;").append(nl);
+        sb.append("}").append(nl).append(nl);
+        // Hover et actif
+        sb.append("nav a:hover {").append(nl);
+        sb.append("  background-color: #e0e0e0;").append(nl);
+        sb.append("}").append(nl).append(nl);
+        sb.append("nav a.router-link-exact-active {").append(nl);
+        sb.append("  font-weight: bold;").append(nl);
+        sb.append("}").append(nl);
+        sb.append("</style>").append(nl);
+
+        try {
+            Files.write(vueDir.resolve("NavBar.vue"),
+                    sb.toString().getBytes(StandardCharsets.UTF_8));
+            showInfo("NavBar.vue généré avec style simple");
+        } catch (IOException e) {
+            showError("Erreur lors de la génération de NavBar.vue: " + e.getMessage());
+        }
     }
 
 }

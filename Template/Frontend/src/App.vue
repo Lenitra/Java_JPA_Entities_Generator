@@ -1,15 +1,13 @@
 <template>
   <div>
-    <nav>
-      <router-link to="/products">Produits</router-link>
-      <router-link to="/orders">Commandes</router-link>
-    </nav>
+    <NavBar />
     <router-view />
   </div>
 </template>
 
 
 <script setup>
+import NavBar from './components/NavBar.vue';
 </script>
 
 
