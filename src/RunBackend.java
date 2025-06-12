@@ -543,6 +543,7 @@ public class RunBackend {
                 .append("import jakarta.validation.constraints.NotBlank;").append(nl)
                 .append("import jakarta.validation.constraints.NotNull;").append(nl)
                 .append("import java.util.*;").append(nl)
+                .append("import app.model.entities.common.*;").append(nl)
                 .append("import app.model.entities.enums.*;").append(nl)
                 .append("import java.time.LocalDate;").append(nl)
                 .append("import jakarta.validation.constraints.Max;").append(nl)
@@ -575,7 +576,7 @@ public class RunBackend {
             sb.append(", of={").append(of).append("}");
         }
         sb.append(")").append(nl).append(nl)
-                .append("public class ").append(name).append(" extends AbstractPersistable<Long> {").append(nl)
+                .append("public class ").append(name).append(" extends AbstractPersistableWithIdSetter<Long> {").append(nl)
                 .append(nl);
 
         // Insertion des arguments
@@ -1037,7 +1038,7 @@ public class RunBackend {
         sb.append("    public ").append(entityClass).append(" toEntity(").append(dtoClass)
                 .append(" dto) throws ValidException {").append(nl)
                 .append("        if (dto == null) return null;").append(nl)
-                .append("       ").append(" return EntityFactory.create").append(entityClass)
+                .append("        ").append(entityClass).append(" opt = EntityFactory.create").append(entityClass)
                 .append("(");
 
         j = idxStart + 1;
@@ -1052,7 +1053,6 @@ public class RunBackend {
                 continue;
             }
             String var = parts[1];
-            System.out.println("Processing field: " + var + " of type: " + typeOfVar);
             if (!typeOfVar.startsWith("List") && !typeOfVar.startsWith("Set") && !typeOfVar.startsWith("Map")
                     && !typeOfVar.startsWith("Collection") && !typeOfVar.startsWith("Iterable")) {
                 sb.append("dto.get").append(Character.toUpperCase(var.charAt(0))).append(var.substring(1))
@@ -1064,6 +1064,9 @@ public class RunBackend {
             sb.deleteCharAt(sb.length() - 1);
         }
         sb.append(");").append(nl);
+
+        sb.append("        ").append("opt.setId(dto.getId());").append(nl);
+        sb.append("        ").append("return opt;").append(nl);
 
         sb.append("    }").append(nl).append(nl);
 

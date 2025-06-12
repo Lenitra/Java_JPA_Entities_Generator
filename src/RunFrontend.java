@@ -134,7 +134,12 @@ public class RunFrontend {
 
         fieldLines.add("export default class " + name + " {");
         fieldLines.add("");
-        fieldLines.add("    static endpoint = 'http://localhost:8080/api/v1/" + tableName + "/" + "';");
+        if (tableName.endsWith("s"))
+            fieldLines.add("    static endpoint = 'http://localhost:8080/api/v1/" + tableName + "/" + "';");
+
+        else
+            fieldLines.add("    static endpoint = 'http://localhost:8080/api/v1/" + tableName + "s/';");
+
         fieldLines.add("");
         fieldLines.add("    static fields = [");
         fieldLines.add("        { name: 'id', type: 'number', label: 'ID', readonly: true },");
@@ -176,7 +181,6 @@ public class RunFrontend {
             }
 
             String col = camelCaseBoundary.matcher(var).replaceAll("$1_$2").toLowerCase();
-            String nullable = required ? ", nullable=false" : "";
             Matcher m = genericPattern.matcher(type);
 
             if ("String".equals(type)) {
