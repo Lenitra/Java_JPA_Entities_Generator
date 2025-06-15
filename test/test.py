@@ -1,164 +1,135 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, abort
 from flask_cors import CORS
 from datetime import date
 
 app = Flask(__name__)
 CORS(app)
 
-# ==== JEUX D'ESSAI ====
-
+# ---------- Jeux d'essai ----------
 soigneurs = [
-    {"id": 1, "nom": "Alice", "embauche": "2022-01-01"},
-    {"id": 2, "nom": "Bob", "embauche": "2020-06-15"},
+    {"id": 1, "nom": "Alan Grant", "embauche": "2000-06-15"},
+    {"id": 2, "nom": "Ellie Sattler", "embauche": "2001-02-20"},
+    {"id": 3, "nom": "Robert Muldoon", "embauche": "1998-08-30"},
 ]
 
 dinos = [
     {
         "id": 1,
-        "nom": "Rex",
-        "female": False,
-        "poids": 1200,
-        "soigneur": [1]
+        "nom": "Rexy",
+        "female": True,
+        "poids": 7000,
+        "soigneur": [1, 2],  # List of soigneur ids
+        "interventions": [{"key": 1, "value": 5}, {"key": 2, "value": 3}]  # Map<Soigneur, Integer> as list of dict
     },
     {
         "id": 2,
         "nom": "Blue",
-        "female": True,
-        "poids": 800,
-        "soigneur": [2, 1]
+        "female": False,
+        "poids": 500,
+        "soigneur": [3],
+        "interventions": [{"key": 3, "value": 10}]
     }
 ]
 
 visiteurs = [
     {
         "id": 1,
-        "nom": "Martin",
-        "dateVisite": "2024-06-10",
-        "commentaires": ["Super visite !", "Un peu bruyant..."]
+        "nom": "Tim Murphy",
+        "dateVisite": "2023-06-15",
+        "commentaires": ["Super visite !", "J'adore les raptors."]
     },
     {
         "id": 2,
-        "nom": "Nina",
-        "dateVisite": "2024-06-12",
-        "commentaires": ["J'adore les dinos !"]
+        "nom": "Lex Murphy",
+        "dateVisite": "2023-06-16",
+        "commentaires": ["Impressionnant !"]
     }
 ]
 
-def get_next_id(items):
-    return max([i["id"] for i in items], default=0) + 1
+# ---------- Utilitaires ----------
+def get_next_id(lst):
+    if lst: return max(x['id'] for x in lst) + 1
+    return 1
 
-# ==== ENDPOINTS DINO ====
-@app.route("/api/v1/dinos/", methods=["GET"])
-def get_dinos():
-    return jsonify(dinos)
+def find_by_id(lst, id):
+    for x in lst:
+        if x['id'] == id:
+            return x
+    return None
 
-@app.route("/api/v1/dinos/", methods=["POST"])
-def add_dino():
+# ---------- Routes génériques ----------
+@app.route("/api/v1/dinos/", methods=["GET", "POST"])
+def api_dinos():
+    if request.method == "GET":
+        return jsonify(dinos)
     data = request.json
-    new_id = get_next_id(dinos)
-    data["id"] = new_id
-    # Par sécurité, on force soigneur à être une liste d'entiers
-    data["soigneur"] = [int(x) for x in data.get("soigneur", [])]
+    data["id"] = get_next_id(dinos)
     dinos.append(data)
     return jsonify(data), 201
 
-@app.route("/api/v1/dinos/<int:id>/", methods=["PUT"])
-def update_dino(id):
+@app.route("/api/v1/dinos/<int:id>/", methods=["GET", "PUT", "DELETE"])
+def api_dino_detail(id):
+    dino = find_by_id(dinos, id)
+    if not dino:
+        abort(404)
+    if request.method == "GET":
+        return jsonify(dino)
+    if request.method == "PUT":
+        newdata = request.json
+        dino.update(newdata)
+        return jsonify(dino)
+    if request.method == "DELETE":
+        dinos.remove(dino)
+        return "", 204
+
+@app.route("/api/v1/soigneurs/", methods=["GET", "POST"])
+def api_soigneurs():
+    if request.method == "GET":
+        return jsonify(soigneurs)
     data = request.json
-    for d in dinos:
-        if d["id"] == id:
-            d.update(data)
-            d["soigneur"] = [int(x) for x in d.get("soigneur", [])]
-            return jsonify(d)
-    return jsonify({"error": "Not found"}), 404
-
-@app.route("/api/v1/dinos/<int:id>/", methods=["DELETE"])
-def delete_dino(id):
-    global dinos
-    dinos = [d for d in dinos if d["id"] != id]
-    return "", 204
-
-# ==== ENDPOINTS SOIGNEUR ====
-@app.route("/api/v1/soigneurs/", methods=["GET"])
-def get_soigneurs():
-    return jsonify(soigneurs)
-
-@app.route("/api/v1/soigneurs/", methods=["POST"])
-def add_soigneur():
-    data = request.json
-    new_id = get_next_id(soigneurs)
-    data["id"] = new_id
+    data["id"] = get_next_id(soigneurs)
     soigneurs.append(data)
     return jsonify(data), 201
 
-@app.route("/api/v1/soigneurs/<int:id>/", methods=["PUT"])
-def update_soigneur(id):
+@app.route("/api/v1/soigneurs/<int:id>/", methods=["GET", "PUT", "DELETE"])
+def api_soigneur_detail(id):
+    soin = find_by_id(soigneurs, id)
+    if not soin:
+        abort(404)
+    if request.method == "GET":
+        return jsonify(soin)
+    if request.method == "PUT":
+        newdata = request.json
+        soin.update(newdata)
+        return jsonify(soin)
+    if request.method == "DELETE":
+        soigneurs.remove(soin)
+        return "", 204
+
+@app.route("/api/v1/visiteurs/", methods=["GET", "POST"])
+def api_visiteurs():
+    if request.method == "GET":
+        return jsonify(visiteurs)
     data = request.json
-    for s in soigneurs:
-        if s["id"] == id:
-            s.update(data)
-            return jsonify(s)
-    return jsonify({"error": "Not found"}), 404
-
-@app.route("/api/v1/soigneurs/<int:id>/", methods=["DELETE"])
-def delete_soigneur(id):
-    global soigneurs
-    soigneurs = [s for s in soigneurs if s["id"] != id]
-    return "", 204
-
-# ==== ENDPOINTS VISITEUR ====
-@app.route("/api/v1/visiteurs/", methods=["GET"])
-def get_visiteurs():
-    return jsonify(visiteurs)
-
-@app.route("/api/v1/visiteurs/", methods=["POST"])
-def add_visiteur():
-    data = request.json
-    new_id = get_next_id(visiteurs)
-    data["id"] = new_id
-    # commentaires doit être une liste de string
-    data["commentaires"] = data.get("commentaires", []) or []
+    data["id"] = get_next_id(visiteurs)
     visiteurs.append(data)
     return jsonify(data), 201
 
-@app.route("/api/v1/visiteurs/<int:id>/", methods=["PUT"])
-def update_visiteur(id):
-    data = request.json
-    for v in visiteurs:
-        if v["id"] == id:
-            v.update(data)
-            v["commentaires"] = v.get("commentaires", []) or []
-            return jsonify(v)
-    return jsonify({"error": "Not found"}), 404
-
-@app.route("/api/v1/visiteurs/<int:id>/", methods=["DELETE"])
-def delete_visiteur(id):
-    global visiteurs
-    visiteurs = [v for v in visiteurs if v["id"] != id]
-    return "", 204
-
-# ==== ENDPOINTS INDIVIDUELS (pour select option) ====
-@app.route("/api/v1/soigneurs/<int:id>/", methods=["GET"])
-def get_soigneur(id):
-    soig = next((s for s in soigneurs if s["id"] == id), None)
-    if soig:
-        return jsonify(soig)
-    return jsonify({"error": "Not found"}), 404
-
-@app.route("/api/v1/dinos/<int:id>/", methods=["GET"])
-def get_dino(id):
-    dino = next((d for d in dinos if d["id"] == id), None)
-    if dino:
-        return jsonify(dino)
-    return jsonify({"error": "Not found"}), 404
-
-@app.route("/api/v1/visiteurs/<int:id>/", methods=["GET"])
-def get_visiteur(id):
-    vis = next((v for v in visiteurs if v["id"] == id), None)
-    if vis:
+@app.route("/api/v1/visiteurs/<int:id>/", methods=["GET", "PUT", "DELETE"])
+def api_visiteur_detail(id):
+    vis = find_by_id(visiteurs, id)
+    if not vis:
+        abort(404)
+    if request.method == "GET":
         return jsonify(vis)
-    return jsonify({"error": "Not found"}), 404
+    if request.method == "PUT":
+        newdata = request.json
+        vis.update(newdata)
+        return jsonify(vis)
+    if request.method == "DELETE":
+        visiteurs.remove(vis)
+        return "", 204
 
-# ==== LANCEMENT ====
+# ---------- Démarrer le serveur ----------
 if __name__ == "__main__":
     app.run(debug=True, port=8080)

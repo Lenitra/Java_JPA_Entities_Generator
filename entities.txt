@@ -1,9 +1,3 @@
-c:Enclos
-- String nom * 
-- List<Dino> dinos .otm
-- List<TypeDino> typeDinos
-
-
 c:Dino
 - String nom
 - Boolean female
@@ -19,13 +13,4 @@ c:Visiteur
 - String nom
 - LocalDate dateVisite 
 - List<String> commentaires
-
-
-e:TypeDino
-- HERBIVORE
-- CARNIVORE
-- OMNIVORE
-- INSECTIVORE
-- PISCIVORE
-
 
