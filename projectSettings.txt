@@ -1,2 +1,2 @@
 database_name=dinosql
-project_path=d:\Utilisateurs\thomas.lemartinel\Desktop\TEST
+project_path=C:\Users\thoma\Desktop\testFront

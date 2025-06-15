@@ -1,36 +1,31 @@
-# c:Enclos
-# - String nom * 
-# - List<Dino> dinos .otm
-# - List<TypeDino> typeDinos
-# 
-# 
-# c:Dino
-# - String nom *
-# - LocalDate ddn *
-# - Boolean sexe
-# - int taille -0
-# - int poids -0
-# - Enclos enclos .mto 
-# - TypeDino type
-# - List<Soigneur> soigneur .mtm
-# 
-# 
-# e:TypeDino
-# - HERBIVORE
-# - CARNIVORE
-# - OMNIVORE
-# - INSECTIVORE
-# - PISCIVORE
-# 
-# 
-# c:Soigneur
-# - String nom *
-# - String prenom *
-# - LocalDate embauche
-# - List<TypeDino> typeDino
+c:Enclos
+- String nom * 
+- List<Dino> dinos .otm
+- List<TypeDino> typeDinos
+
+
+c:Dino
+- String nom
+- Boolean female
+- int poids
+- List<Soigneur> soigneur 
+- Map<Soigneur,Integer> interventions
+
+c:Soigneur
+- String nom
+- LocalDate embauche
 
 c:Visiteur
-- String nom *
-- String prenom *
+- String nom
 - LocalDate dateVisite 
 - List<String> commentaires
+
+
+e:TypeDino
+- HERBIVORE
+- CARNIVORE
+- OMNIVORE
+- INSECTIVORE
+- PISCIVORE
+
+

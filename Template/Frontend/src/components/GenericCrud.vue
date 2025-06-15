@@ -1,21 +1,135 @@
 <template>
   <div class="generic-crud-container">
-    <h1>{{ props.title }}</h1>
+    <h1>{{ title }}</h1>
 
     <!-- Formulaire générique -->
     <form @submit.prevent="onSubmit">
-      <template v-for="field in props.entityConfig.fields" :key="field.name">
+      <template v-for="field in entityConfig.fields" :key="field.name">
         <div class="form-group">
-            <label :for="field.name">{{ field.label }}</label>
-            <input
-              :id="field.name"
-              v-model="form[field.name]"
-              :type="field.type"
-              :step="field.step || null"
-              :readonly="field.readonly || false"
-              :required="!field.readonly"
-              :style="field.readonly ? 'background-color: #eee; color: #888; cursor: not-allowed;' : ''"
-            />
+          <label :for="field.name">{{ field.label }}</label>
+
+          <!-- Liste de primitifs -->
+          <div v-if="(field.list || field.type === 'list') && !field.entity">
+            <div v-for="(item, idx) in form[field.name]" :key="idx" class="array-item">
+              <input
+                :id="field.name + '_' + idx"
+                v-model="form[field.name][idx]"
+                :type="inputType(field.type === 'list' ? 'text' : field.type)"
+                :readonly="field.readonly || false"
+                :required="!field.readonly"
+              />
+              <button type="button" @click="removeFromList(field.name, idx)">❌</button>
+            </div>
+            <button type="button" class="array-add-btn" @click="addToList(field.name)">Ajouter</button>
+          </div>
+
+          <!-- Liste d'entités : UN SELECT PAR ELEMENT, option = id -->
+          <div v-else-if="field.type === 'list' && field.entity">
+            <div v-for="(item, idx) in form[field.name]" :key="idx" class="array-item">
+              <select
+                :id="field.name + '_' + idx"
+                v-model="form[field.name][idx]"
+                :required="!field.readonly"
+              >
+                <option disabled value="">-- Sélectionner --</option>
+                <option
+                  v-for="option in Array.isArray(entityOptions[field.entity]) ? entityOptions[field.entity] : []"
+                  :key="option.id"
+                  :value="option.id"
+                >
+                  {{ option.id }}
+                </option>
+              </select>
+              <button type="button" @click="removeFromList(field.name, idx)">❌</button>
+            </div>
+            <button type="button" class="array-add-btn" @click="addToList(field.name)">Ajouter</button>
+          </div>
+
+          <!-- Map : chaque entrée = un couple clé/valeur, typés dynamiquement -->
+          <div v-else-if="field.type === 'map'">
+            <div v-for="(pair, idx) in form[field.name]" :key="idx" class="array-item">
+              <!-- Clé -->
+              <template v-if="field.type1 && isEntityType(field.type1)">
+                <select
+                  :id="field.name + '_key_' + idx"
+                  v-model="form[field.name][idx].key"
+                  :required="!field.readonly"
+                >
+                  <option disabled value="">-- Clé --</option>
+                  <option
+                    v-for="option in Array.isArray(entityOptions[field.type1]) ? entityOptions[field.type1] : []"
+                    :key="option.id"
+                    :value="option.id"
+                  >
+                    {{ option.id }}
+                  </option>
+                </select>
+              </template>
+              <template v-else>
+                <input
+                  :id="field.name + '_key_' + idx"
+                  v-model="form[field.name][idx].key"
+                  :type="inputType(field.type1)"
+                  :placeholder="'Clé'"
+                  :readonly="field.readonly || false"
+                  :required="!field.readonly"
+                  style="width: 90px"
+                />
+              </template>
+              <!-- Valeur -->
+              <template v-if="field.type2 && isEntityType(field.type2)">
+                <select
+                  :id="field.name + '_val_' + idx"
+                  v-model="form[field.name][idx].value"
+                  :required="!field.readonly"
+                >
+                  <option disabled value="">-- Valeur --</option>
+                  <option
+                    v-for="option in Array.isArray(entityOptions[field.type2]) ? entityOptions[field.type2] : []"
+                    :key="option.id"
+                    :value="option.id"
+                  >
+                    {{ option.id }}
+                  </option>
+                </select>
+              </template>
+              <template v-else>
+                <input
+                  :id="field.name + '_val_' + idx"
+                  v-model="form[field.name][idx].value"
+                  :type="inputType(field.type2)"
+                  :placeholder="'Valeur'"
+                  :readonly="field.readonly || false"
+                  :required="!field.readonly"
+                  style="width: 90px"
+                />
+              </template>
+              <button type="button" @click="removeFromMap(field.name, idx)">❌</button>
+            </div>
+            <button type="button" class="array-add-btn" @click="addToMap(field.name)">Ajouter</button>
+          </div>
+
+          <!-- Champ boolean simple -->
+          <input
+            v-else-if="inputType(field.type) === 'checkbox'"
+            :id="field.name"
+            type="checkbox"
+            v-model="form[field.name]"
+            :readonly="field.readonly || false"
+            :style="field.readonly ? 'background-color: #eee; color: #888; cursor: not-allowed;' : ''"
+          />
+          <!-- Champ normal -->
+          <input
+            v-else
+            :id="field.name"
+            v-model="form[field.name]"
+            :type="inputType(field.type)"
+            :step="field.step || null"
+            :readonly="field.readonly || false"
+            :required="!field.readonly"
+            :style="field.readonly ? 'background-color: #eee; color: #888; cursor: not-allowed;' : ''"
+          />
+
         </div>
       </template>
 
@@ -30,33 +144,32 @@
     <!-- Tableau générique -->
     <table>
       <thead>
-      <tr>
-      <th v-for="field in props.entityConfig.fields" :key="field.name">
-        {{ field.label }}
-      </th>
-      <th>Actions</th>
-      </tr>
+        <tr>
+          <th v-for="field in entityConfig.fields" :key="field.name">
+            {{ field.label }}
+          </th>
+          <th>Actions</th>
+        </tr>
       </thead>
       <tbody>
-      <tr v-for="item in items" :key="item.id">
-      <td v-for="field in props.entityConfig.fields" :key="field.name">
-        {{ formatValue(item[field.name], field) }}
-      </td>
-      <td>
-        <button @click="onEdit(item)">✏️</button>
-        <button @click="onDelete(item.id)">🗑️</button>
-      </td>
-      </tr>
+        <tr v-for="item in items" :key="item.id">
+          <td v-for="field in entityConfig.fields" :key="field.name">
+            {{ formatValue(item[field.name], field) }}
+          </td>
+          <td>
+            <button @click="onEdit(item)">✏️</button>
+            <button @click="onDelete(item.id)">🗑️</button>
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
 </template>
 
 <script setup>
-import {ref, reactive, onMounted, onUnmounted} from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 
-// On récupère les props sous forme d'un objet "props"
 const props = defineProps({
   entityConfig: {
     type: Object,
@@ -68,32 +181,122 @@ const props = defineProps({
   }
 })
 
+const entityConfig = props.entityConfig
+const title = props.title
+
 const items = ref([])
 const form = reactive({})
+const entityOptions = reactive({})
 
-// Initialise les clefs du formulaire selon props.entityConfig.fields
+const BASIC_TYPES = ['text', 'number', 'date', 'boolean', 'checkbox']
+
+function isEntityType(type) {
+  if (!type) return false
+  return !BASIC_TYPES.includes(type.toLowerCase())
+}
+function inputType(type) {
+  if (!type) return 'text'
+  if (type.toLowerCase() === 'boolean') return 'checkbox'
+  if (type.toLowerCase() === 'checkbox') return 'checkbox'
+  if (type.toLowerCase() === 'date') return 'date'
+  if (
+    type.toLowerCase() === 'number' ||
+    type.toLowerCase() === 'int' ||
+    type.toLowerCase() === 'float' ||
+    type.toLowerCase() === 'double'
+  ) return 'number'
+  return 'text'
+}
+
+// ----------- Initialisation formulaire -----------
 const initForm = () => {
-  props.entityConfig.fields.forEach(f => {
-    form[f.name] = f.readonly ? null : ''
+  entityConfig.fields.forEach(f => {
+    if (f.type === 'map') {
+      form[f.name] = []
+    } else if (f.list || f.type === 'list') {
+      form[f.name] = []
+    } else {
+      form[f.name] = f.readonly ? null : ''
+    }
   })
 }
-
 const resetForm = () => {
-  props.entityConfig.fields.forEach(f => {
-    form[f.name] = f.readonly ? null : ''
+  entityConfig.fields.forEach(f => {
+    if (f.type === 'map') {
+      form[f.name] = []
+    } else if (f.list || f.type === 'list') {
+      form[f.name] = []
+    } else {
+      form[f.name] = f.readonly ? null : ''
+    }
   })
 }
 
+// ----------- Gestion listes dynamiques -----------
+function addToList(fieldName) {
+  form[fieldName].push('')
+}
+function removeFromList(fieldName, idx) {
+  form[fieldName].splice(idx, 1)
+}
+
+// ----------- Gestion map dynamiques -----------
+function addToMap(fieldName) {
+  form[fieldName].push({ key: '', value: '' })
+}
+function removeFromMap(fieldName, idx) {
+  form[fieldName].splice(idx, 1)
+}
+
+// ----------- Chargement des options pour les entités -----------
+const fetchEntityOptions = async () => {
+  const typesToFetch = new Set()
+  entityConfig.fields.forEach(f => {
+    if ((f.type === 'list' && f.entity)) {
+      typesToFetch.add(f.entity)
+    }
+    if (f.type === 'map') {
+      if (isEntityType(f.type1)) typesToFetch.add(f.type1)
+      if (isEntityType(f.type2)) typesToFetch.add(f.type2)
+    }
+  })
+  await Promise.all(
+    Array.from(typesToFetch).map(async (typeName) => {
+      try {
+        const url = `http://localhost:8080/api/v1/${typeName.toLowerCase()}s/`
+        const res = await axios.get(url)
+        if (Array.isArray(res.data)) {
+          entityOptions[typeName] = res.data
+        } else if (Array.isArray(res.data.results)) {
+          entityOptions[typeName] = res.data.results
+        } else {
+          entityOptions[typeName] = []
+        }
+      } catch (e) {
+        entityOptions[typeName] = []
+      }
+    })
+  )
+}
+
+// ----------- Formatage pour affichage tableau -----------
 const formatValue = (value, field) => {
+  if (field.type === 'map' && Array.isArray(value)) {
+    return value.map(pair => (pair.key ?? '') + '→' + (pair.value ?? '')).join(' | ')
+  }
+  if ((field.list || field.type === 'list') && Array.isArray(value)) {
+    return value.join(', ')
+  }
   if (field.type === 'number' && typeof value === 'number') {
     return value
   }
   return value
 }
 
+// ----------- CRUD actions -----------
 const fetchItems = async () => {
   try {
-    const res = await axios.get(props.entityConfig.endpoint)
+    const res = await axios.get(entityConfig.endpoint)
     items.value = res.data
   } catch (err) {
     console.error('Erreur fetchItems:', err)
@@ -102,9 +305,17 @@ const fetchItems = async () => {
 
 const onSubmit = async () => {
   const payload = {}
-  props.entityConfig.fields.forEach(f => {
+
+  entityConfig.fields.forEach(f => {
     if (!f.readonly) {
-      if (f.type === 'number') {
+      if (f.type === 'map') {
+        payload[f.name] = form[f.name]
+      } else if (f.list || f.type === 'list') {
+        payload[f.name] = form[f.name]
+      } else if (inputType(f.type) === 'checkbox') {
+        // Toujours true ou false
+        payload[f.name] = !!form[f.name]
+      } else if (f.type === 'number') {
         const val = form[f.name]
         payload[f.name] = val === '' || val === null ? null : parseFloat(val)
       } else {
@@ -113,14 +324,16 @@ const onSubmit = async () => {
     }
   })
 
+  // console.log("Payload envoyé:", payload)
+
   try {
     if (form.id) {
-      await axios.put(`${props.entityConfig.endpoint}${form.id}/`, {
+      await axios.put(`${entityConfig.endpoint}${form.id}/`, {
         ...payload,
         id: form.id
       })
     } else {
-      await axios.post(props.entityConfig.endpoint, payload)
+      await axios.post(entityConfig.endpoint, payload)
     }
     resetForm()
     await fetchItems()
@@ -130,27 +343,32 @@ const onSubmit = async () => {
 }
 
 const onEdit = (item) => {
-  props.entityConfig.fields.forEach(f => {
-    form[f.name] = item[f.name]
+  entityConfig.fields.forEach(f => {
+    if (f.type === 'map') {
+      form[f.name] = Array.isArray(item[f.name]) ? JSON.parse(JSON.stringify(item[f.name])) : []
+    } else if (f.list || f.type === 'list') {
+      form[f.name] = Array.isArray(item[f.name]) ? [...item[f.name]] : []
+    } else {
+      form[f.name] = item[f.name]
+    }
   })
 }
 
 const onDelete = async (id) => {
   try {
-    await axios.delete(`${props.entityConfig.endpoint}${id}/`)
+    await axios.delete(`${entityConfig.endpoint}${id}/`)
     await fetchItems()
   } catch (err) {
     console.error('Erreur onDelete:', err)
   }
 }
 
-// Animation aléatoire des lignes
 let intervalId = null
-
 
 onMounted(async () => {
   initForm()
   await fetchItems()
+  await fetchEntityOptions()
 })
 
 onUnmounted(() => {
@@ -159,6 +377,21 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.array-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+.array-add-btn {
+  background-color: #2ecc71;
+  margin-top: 3px;
+  margin-bottom: 3px;
+}
+.array-add-btn:hover {
+  background-color: #219150;
+}
+
 .generic-crud-container {
   max-width: 900px;
   margin: 40px auto;
@@ -221,6 +454,22 @@ form button:hover {
 
 form button:active {
   transform: scale(0.98);
+}
+
+.array-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.array-add-btn {
+  background-color: #2ecc71;
+  margin-top: 3px;
+  margin-bottom: 3px;
+}
+.array-add-btn:hover {
+  background-color: #219150;
 }
 
 table {
@@ -296,4 +545,3 @@ td button:last-child {
   }
 }
 </style>
-

@@ -201,6 +201,56 @@ public class RunFrontend {
                         "        {name: '" + col + "', type: 'text', label: '" + var + "', maxLength: 1},");
             } else if (type.equals("LocalDate") || type.equals("LocalDateTime")) {
                 fieldLines.add("        {name: '" + col + "', type: 'date', label: '" + var + "'},");
+
+            } else if (type.startsWith("List") || type.startsWith("Set")) {
+                // Définir si c'est une liste de primitif ou d'entité
+                String[] typeParts = type.split("<");
+                if (typeParts.length > 1 && typeParts[1].replace(">", "").matches("String|byte|short|int|long|float|double|Boolean|Character|Integer|Long|Float|Double|LocalDate|LocalDateTime|Date|char")) {
+                    String listType;
+                    if (typeParts[1].replace(">", "").equals("Integer") || typeParts[1].replace(">", "").equals("int") 
+                            || typeParts[1].replace(">", "").equals("Long") || typeParts[1].replace(">", "").equals("long")
+                            || typeParts[1].replace(">", "").equals("Float") || typeParts[1].replace(">", "").equals("float")
+                            || typeParts[1].replace(">", "").equals("Double") || typeParts[1].replace(">", "").equals("double")) {
+                        listType = "number";
+                    } else if (typeParts[1].replace(">", "").equals("Date") || typeParts[1].replace(">", "").equals("char")) {
+                        listType = "text";
+                    } else {
+                        listType = "text";
+                    }
+                    
+                    fieldLines.add("        {name: '" + col + "', type: '"+listType+"', label: '" + var + "', list:true},");
+                } else {
+                    // fieldLines.add("        //TODO: List/Set de type complexe: " + type);
+                    fieldLines.add("        {name: '" + col + "', type: 'list', label: '" + var + "', entity: '" + typeParts[1].replace(">", "").trim() + "'},");
+                }
+            } else if (type.startsWith("Map")) {
+
+                String type1 = type.replace(">", "").split("<")[1].trim().replace(" ", "").split(",")[0];
+                String type2 = type.replace(">", "").split("<")[1].trim().replace(" ", "").split(",")[1];
+                
+                if (basicTypes.contains(type1)) {
+                    if (type1.equals("Integer") || type1.equals("int") || type1.equals("Long") || type1.equals("long")
+                    || type1.equals("Float") || type1.equals("float") || type1.equals("Double") || type1.equals("double")) {
+                        type1 = "number";
+                    } else if (type1.equals("LocalDate") || type1.equals("LocalDateTime")) {
+                        type1 = "date";
+                    } else {
+                        type1 = "text";
+                    }
+                } 
+                
+                if (basicTypes.contains(type2)) {
+                    if (type2.equals("Integer") || type2.equals("int") || type2.equals("Long") || type2.equals("long")
+                    || type2.equals("Float") || type2.equals("float") || type2.equals("Double") || type2.equals("double")) {
+                        type2 = "number";
+                    } else if (type2.equals("LocalDate") || type2.equals("LocalDateTime")) {
+                        type2 = "date";
+                    } else {
+                        type2 = "text";
+                    }
+                }
+
+                fieldLines.add("        {name: '" + col + "', type: 'map', label: '" + var + "', type1: '" + type1 + "', type2: '" + type2 + "'},");
             } else {
                 fieldLines.add("//TODO   : " + type + " " + var);
             }
@@ -271,8 +321,9 @@ public class RunFrontend {
         for (String entity : entities) {
             sb.append("import ").append(entity).append("CRUD from '@/views/").append(entity).append("CRUD.vue'\n");
         }
+        sb.append("import Home from '@/views/Home.vue'\n");
         sb.append("\nconst routes = [\n");
-        sb.append("    { path: '/', component: '/home' },\n");
+        sb.append("    { path: '/', component: Home },\n");
         for (String entity : entities) {
             sb.append("    { path: '/").append(entity.toLowerCase()).append("', component: ").append(entity)
                     .append("CRUD },\n");
@@ -298,7 +349,7 @@ public class RunFrontend {
 
                 sb.append("<template>").append(nl);
                 sb.append("  <GenericCrud").append(nl);
-                sb.append("      :entityConfig=\"").append(name).append("\"").append(nl);
+                sb.append("      :entityConfig=\"entityConfig\"").append(nl);
                 sb.append("      title=\"").append(name).append("\"").append(nl);
                 sb.append("  />").append(nl);
                 sb.append("</template>").append(nl).append(nl);
@@ -308,6 +359,8 @@ public class RunFrontend {
                 sb.append("import ").append(name)
                         .append(" from \"@/entities/").append(name).append(".js\";")
                         .append(nl);
+                sb.append("const entityConfig = {").append("fields: ").append(name).append(".fields,").append(nl)
+                        .append("  endpoint: ").append(name).append(".endpoint").append("};").append(nl);
                 sb.append("</script>").append(nl);
 
                 try {
@@ -330,6 +383,7 @@ public class RunFrontend {
         sb.append("<template>").append(nl);
         sb.append("    <nav>").append(nl);
         sb.append("        <ul>").append(nl);
+        sb.append("            <li><router-link to=\"/\">Home</router-link></li>").append(nl);
 
         for (String line : lines) {
             if (line.trim().startsWith("c:")) {
