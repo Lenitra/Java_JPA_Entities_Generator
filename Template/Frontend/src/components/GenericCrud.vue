@@ -23,7 +23,7 @@
             <button type="button" class="array-add-btn" @click="addToList(field.name)">Ajouter</button>
           </div>
 
-          <!-- Liste d'entités : UN SELECT PAR ELEMENT, option = id -->
+          <!-- Liste d'entités -->
           <div v-else-if="field.type === 'list' && field.entity">
             <div v-for="(item, idx) in form[field.name]" :key="idx" class="array-item">
               <select
@@ -45,10 +45,9 @@
             <button type="button" class="array-add-btn" @click="addToList(field.name)">Ajouter</button>
           </div>
 
-          <!-- Map : chaque entrée = un couple clé/valeur, typés dynamiquement -->
+          <!-- Map -->
           <div v-else-if="field.type === 'map'">
             <div v-for="(pair, idx) in form[field.name]" :key="idx" class="array-item">
-              <!-- Clé -->
               <template v-if="field.type1 && isEntityType(field.type1)">
                 <select
                   :id="field.name + '_key_' + idx"
@@ -76,7 +75,6 @@
                   style="width: 90px"
                 />
               </template>
-              <!-- Valeur -->
               <template v-if="field.type2 && isEntityType(field.type2)">
                 <select
                   :id="field.name + '_val_' + idx"
@@ -109,7 +107,7 @@
             <button type="button" class="array-add-btn" @click="addToMap(field.name)">Ajouter</button>
           </div>
 
-          <!-- Champ boolean simple -->
+          <!-- Boolean simple -->
           <input
             v-else-if="inputType(field.type) === 'checkbox'"
             :id="field.name"
@@ -130,19 +128,13 @@
             :required="inputType(field.type) === 'checkbox' ? false : !field.readonly"
             :style="field.readonly ? 'background-color: #eee; color: #888; cursor: not-allowed;' : ''"
           />
-
         </div>
       </template>
-
-      <button type="submit">
-        {{ form.id ? 'Modifier' : 'Ajouter' }}
-      </button>
-      <button v-if="form.id" type="button" @click="resetForm">
-        Annuler
-      </button>
+      <button type="submit">{{ form.id ? 'Modifier' : 'Ajouter' }}</button>
+      <button v-if="form.id" type="button" @click="resetForm">Annuler</button>
     </form>
 
-    <!-- Tableau générique avec tri -->
+    <!-- Tableau générique avec tri + filtre -->
     <table>
       <thead>
         <tr>
@@ -156,9 +148,21 @@
           </th>
           <th>Actions</th>
         </tr>
+        <tr>
+          <th v-for="field in entityConfig.fields" :key="field.name + '-filter'">
+            <input
+              v-model="filters[field.name]"
+              type="text"
+              class="filter-input"
+              :placeholder="'Filtrer...'"
+              @keydown.stop
+            />
+          </th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
-        <tr v-for="item in sortedItems()" :key="item.id">
+        <tr v-for="item in filteredAndSortedItems()" :key="item.id">
           <td v-for="field in entityConfig.fields" :key="field.name">
             {{ formatValue(item[field.name], field) }}
           </td>
@@ -173,7 +177,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, watch } from 'vue'
 import axios from 'axios'
 
 const props = defineProps({
@@ -193,7 +197,7 @@ const title = props.title
 const items = ref([])
 const form = reactive({})
 const entityOptions = reactive({})
-
+const filters = reactive({})
 const BASIC_TYPES = ['text', 'number', 'date', 'boolean', 'checkbox']
 
 function isEntityType(type) {
@@ -226,33 +230,8 @@ function setSort(field) {
     sortOrder.value = 1
   }
 }
-function sortedItems() {
-  if (!sortField.value) return items.value
-  const fieldDef = entityConfig.fields.find(f => f.name === sortField.value)
-  return [...items.value].sort((a, b) => {
-    let av = a[sortField.value]
-    let bv = b[sortField.value]
-    if (fieldDef && (fieldDef.type === 'number' || fieldDef.type === 'int')) {
-      av = Number(av)
-      bv = Number(bv)
-    }
-    if (fieldDef && fieldDef.type === 'boolean') {
-      av = av ? 1 : 0
-      bv = bv ? 1 : 0
-    }
-    if (fieldDef && fieldDef.type === 'date') {
-      av = av || ""
-      bv = bv || ""
-    }
-    if (av == null) av = ""
-    if (bv == null) bv = ""
-    if (av < bv) return -1 * sortOrder.value
-    if (av > bv) return 1 * sortOrder.value
-    return 0
-  })
-}
 
-// ----------- Initialisation formulaire -----------
+// ----------- Initialisation formulaire et filtres -----------
 const initForm = () => {
   entityConfig.fields.forEach(f => {
     if (f.type === 'map') {
@@ -280,6 +259,13 @@ const resetForm = () => {
   })
 }
 
+// Initialise les filtres (une fois le composant monté)
+const initFilters = () => {
+  entityConfig.fields.forEach(f => {
+    if (!(f.name in filters)) filters[f.name] = ''
+  })
+}
+
 // ----------- Gestion listes dynamiques -----------
 function addToList(fieldName) {
   form[fieldName].push('')
@@ -287,8 +273,6 @@ function addToList(fieldName) {
 function removeFromList(fieldName, idx) {
   form[fieldName].splice(idx, 1)
 }
-
-// ----------- Gestion map dynamiques -----------
 function addToMap(fieldName) {
   form[fieldName].push({ key: '', value: '' })
 }
@@ -342,6 +326,43 @@ const formatValue = (value, field) => {
     return value
   }
   return value
+}
+
+// ----------- Filtrage + Tri -----------
+
+function filteredAndSortedItems() {
+  let filtered = items.value.filter(item => {
+    return entityConfig.fields.every(f => {
+      const val = formatValue(item[f.name], f)
+      const filterText = (filters[f.name] || '').toString().toLowerCase()
+      if (!filterText) return true
+      return (val !== undefined && val !== null && val.toString().toLowerCase().includes(filterText))
+    })
+  })
+
+  if (!sortField.value) return filtered
+  const fieldDef = entityConfig.fields.find(f => f.name === sortField.value)
+  return [...filtered].sort((a, b) => {
+    let av = a[sortField.value]
+    let bv = b[sortField.value]
+    if (fieldDef && (fieldDef.type === 'number' || fieldDef.type === 'int')) {
+      av = Number(av)
+      bv = Number(bv)
+    }
+    if (fieldDef && fieldDef.type === 'boolean') {
+      av = av ? 1 : 0
+      bv = bv ? 1 : 0
+    }
+    if (fieldDef && fieldDef.type === 'date') {
+      av = av || ""
+      bv = bv || ""
+    }
+    if (av == null) av = ""
+    if (bv == null) bv = ""
+    if (av < bv) return -1 * sortOrder.value
+    if (av > bv) return 1 * sortOrder.value
+    return 0
+  })
 }
 
 // ----------- CRUD actions -----------
@@ -416,6 +437,7 @@ let intervalId = null
 
 onMounted(async () => {
   initForm()
+  initFilters()
   await fetchItems()
   await fetchEntityOptions()
 })
@@ -503,6 +525,15 @@ form button:hover {
 
 form button:active {
   transform: scale(0.98);
+}
+
+.filter-input {
+  width: 100%;
+  padding: 3px 5px;
+  font-size: 0.95rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
 
 .array-item {
