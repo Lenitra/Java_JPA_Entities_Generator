@@ -118,6 +118,7 @@
             :readonly="field.readonly || false"
             :style="field.readonly ? 'background-color: #eee; color: #888; cursor: not-allowed;' : ''"
           />
+
           <!-- Champ normal -->
           <input
             v-else
@@ -126,7 +127,7 @@
             :type="inputType(field.type)"
             :step="field.step || null"
             :readonly="field.readonly || false"
-            :required="!field.readonly"
+            :required="inputType(field.type) === 'checkbox' ? false : !field.readonly"
             :style="field.readonly ? 'background-color: #eee; color: #888; cursor: not-allowed;' : ''"
           />
 
@@ -141,18 +142,23 @@
       </button>
     </form>
 
-    <!-- Tableau générique -->
+    <!-- Tableau générique avec tri -->
     <table>
       <thead>
         <tr>
-          <th v-for="field in entityConfig.fields" :key="field.name">
+          <th v-for="field in entityConfig.fields" :key="field.name"
+              @click="setSort(field.name)"
+              style="cursor:pointer;user-select:none;">
             {{ field.label }}
+            <span v-if="sortField === field.name">
+              {{ sortOrder === 1 ? '▲' : '▼' }}
+            </span>
           </th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in items" :key="item.id">
+        <tr v-for="item in sortedItems()" :key="item.id">
           <td v-for="field in entityConfig.fields" :key="field.name">
             {{ formatValue(item[field.name], field) }}
           </td>
@@ -208,6 +214,44 @@ function inputType(type) {
   return 'text'
 }
 
+// ----- Tri par colonne -----
+const sortField = ref(null)
+const sortOrder = ref(1) // 1=ASC, -1=DESC
+
+function setSort(field) {
+  if (sortField.value === field) {
+    sortOrder.value *= -1
+  } else {
+    sortField.value = field
+    sortOrder.value = 1
+  }
+}
+function sortedItems() {
+  if (!sortField.value) return items.value
+  const fieldDef = entityConfig.fields.find(f => f.name === sortField.value)
+  return [...items.value].sort((a, b) => {
+    let av = a[sortField.value]
+    let bv = b[sortField.value]
+    if (fieldDef && (fieldDef.type === 'number' || fieldDef.type === 'int')) {
+      av = Number(av)
+      bv = Number(bv)
+    }
+    if (fieldDef && fieldDef.type === 'boolean') {
+      av = av ? 1 : 0
+      bv = bv ? 1 : 0
+    }
+    if (fieldDef && fieldDef.type === 'date') {
+      av = av || ""
+      bv = bv || ""
+    }
+    if (av == null) av = ""
+    if (bv == null) bv = ""
+    if (av < bv) return -1 * sortOrder.value
+    if (av > bv) return 1 * sortOrder.value
+    return 0
+  })
+}
+
 // ----------- Initialisation formulaire -----------
 const initForm = () => {
   entityConfig.fields.forEach(f => {
@@ -215,6 +259,8 @@ const initForm = () => {
       form[f.name] = []
     } else if (f.list || f.type === 'list') {
       form[f.name] = []
+    } else if (inputType(f.type) === 'checkbox') {
+      form[f.name] = false
     } else {
       form[f.name] = f.readonly ? null : ''
     }
@@ -226,6 +272,8 @@ const resetForm = () => {
       form[f.name] = []
     } else if (f.list || f.type === 'list') {
       form[f.name] = []
+    } else if (inputType(f.type) === 'checkbox') {
+      form[f.name] = false
     } else {
       form[f.name] = f.readonly ? null : ''
     }
@@ -287,6 +335,9 @@ const formatValue = (value, field) => {
   if ((field.list || field.type === 'list') && Array.isArray(value)) {
     return value.join(', ')
   }
+  if (field.type === 'boolean') {
+    return value ? '✔️' : ''
+  }
   if (field.type === 'number' && typeof value === 'number') {
     return value
   }
@@ -305,15 +356,13 @@ const fetchItems = async () => {
 
 const onSubmit = async () => {
   const payload = {}
-
   entityConfig.fields.forEach(f => {
     if (!f.readonly) {
       if (f.type === 'map') {
         payload[f.name] = form[f.name]
-      } else if (f.list || f.type === 'list') {
+      } else if ((f.list || f.type === 'list')) {
         payload[f.name] = form[f.name]
       } else if (inputType(f.type) === 'checkbox') {
-        // Toujours true ou false
         payload[f.name] = !!form[f.name]
       } else if (f.type === 'number') {
         const val = form[f.name]
@@ -323,8 +372,6 @@ const onSubmit = async () => {
       }
     }
   })
-
-  // console.log("Payload envoyé:", payload)
 
   try {
     if (form.id) {
@@ -348,6 +395,8 @@ const onEdit = (item) => {
       form[f.name] = Array.isArray(item[f.name]) ? JSON.parse(JSON.stringify(item[f.name])) : []
     } else if (f.list || f.type === 'list') {
       form[f.name] = Array.isArray(item[f.name]) ? [...item[f.name]] : []
+    } else if (inputType(f.type) === 'checkbox') {
+      form[f.name] = !!item[f.name]
     } else {
       form[f.name] = item[f.name]
     }
@@ -496,6 +545,10 @@ td {
 th {
   font-weight: 600;
   color: #555;
+}
+
+th:hover {
+  background: #dbeafe;
 }
 
 tbody tr:hover {
